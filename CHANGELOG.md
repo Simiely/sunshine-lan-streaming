@@ -1,5 +1,26 @@
 # CHANGELOG
 
+## v0.4.0 — 2026-11-24
+
+### 新增
+
+- 虚拟显示器落地：`payload/scripts/Install-Vdd.ps1` + `payload/安装虚拟屏.cmd`，从随包 zip 本地安装 MTT VDD（零网络），安装后把 Sunshine 切到 `vdd` 基线——`ensure_only_display`（连上即禁用其余屏）+ `dd_configuration_option` 配套 + 断流自动回滚。
+- 多设备分辨率预设 `payload/conf/vdd-resolutions.txt`：按设备名列出 `2772x1272`(Find X9 Pro) / `2868x1320`(iPhone 17 Pro Max) / `2732x2048@120`(iPad Pro M1) / `1920x1080`(Switch 底座) / `3840x2160`(电视 4K)，安装时并入 `vdd_settings.xml`，不在列表里的分辨率会被清理。
+- 救援脚本 `payload/scripts/Restore-Display.ps1` + `payload/恢复显示.cmd`：虚拟屏异常时强制 `Enable-PnpDevice` 并 `DisplaySwitch /extend`，不改配置、可反复执行。
+- 踩坑页 `docs/虚拟屏配置不生效.md`：BOM 导致 XmlLite 解析失败 → 虚拟屏恒为 800x600；含三个"看起来该有效、实际全无效"的假象与管道诊断手段。
+
+### 变更
+
+- `_Baseline.ps1` 抽出共享层：两套 profile、合并写回、服务重启、`dxgi-info` 解析、虚拟屏识别、分辨率同步。
+- 虚拟屏识别改为五级判定（显式指定 → 已记录 → 品牌黑名单过滤后的严格匹配 → 差集 → Moonlight 档位兜底），遇到歧义一律中止，不写 `sunshine.conf`。刻意排除 `raylink` / `oray` 等第三方 IDD，本机三者并存。
+- 设备存在性判定从 `Get-PnpDevice` 改为直接读注册表 `Enum\ROOT\DISPLAY\*` 的 `HardwareID`——实测 `Get-PnpDevice` 在提权会话里会静默返回空集，导致误判"未安装"而重复装驱动，多生成一块虚拟屏。
+- `manifest/components.json`：新增 `vdd` 组件（25.7.23 / SHA256 / 71,225,903 字节 / MIT），`package.version` → 0.4.0。
+
+### 说明
+
+- 本版仍不含可安装产物：真机串流成立，但局域网拓扑（业务网段 `10.4.240.0/23`）尚未验证，按 `DEVELOPMENT.md` 的规则 zip 不可发布。
+- 虚拟屏配置生效依赖两点已固化：写入必须无 BOM；配置变更后必须重建 PnP 设备节点才能让驱动重读（`disable/enable` 不够）。
+
 ## v0.3.0 — 2026-11-24
 
 ### 新增

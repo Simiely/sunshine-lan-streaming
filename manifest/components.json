@@ -2,7 +2,7 @@
   "schema_version": 1,
   "package": {
     "name": "sunshine-lan-streaming",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "target": "windows-amd64",
     "min_os": "10.0.19041",
     "scope": "单台 Windows 宿主、仅局域网、Moonlight 客户端"
@@ -33,16 +33,28 @@
       "license_url": "https://github.com/moonlight-stream/moonlight-qt/blob/v6.2.0/LICENSE",
       "verified_at": "2026-11-24",
       "why": "6.2.0 修复 CVE-2026-33546/33547/41210；便携版带 portable.dat，配置与日志写在本目录"
+    },
+    "vdd": {
+      "role": "host-virtual-display",
+      "version": "25.7.23",
+      "channel": "stable",
+      "asset": "VDD.Control.25.7.23.zip",
+      "url": "https://github.com/VirtualDrivers/Virtual-Display-Driver/releases/download/25.7.23/VDD.Control.25.7.23.zip",
+      "sha256": "a701f2272e9fcf382849b24f913c6dd07597b3b1116525f2e90182f019609154",
+      "size_bytes": 71225903,
+      "license": "MIT",
+      "source_url": "https://github.com/VirtualDrivers/Virtual-Display-Driver/tree/25.7.23",
+      "license_url": "https://github.com/VirtualDrivers/Virtual-Display-Driver/blob/25.7.23/LICENSE",
+      "verified_at": "2026-11-24",
+      "hash_source": "winget 清单元数据（winget show --id VirtualDrivers.Virtual-Display-Driver），非 Release 页手抄",
+      "install": "随包分发；解包后用 pnputil /add-driver <inf> /install，安装时零网络",
+      "why": "独立的 IddCx 虚拟显示器驱动，不受向日葵/RayLink 服务启停影响；配合 dd_configuration_option=ensure_only_display 实现连上即切虚拟屏、物理屏息屏"
     }
   },
   "deferred": {
     "vigembus": {
       "reason": "仅虚拟手柄需要，非首版必需",
       "trap": "6.2.0 起 Moonlight 便携版若从 6.1.x 同目录升级，须先删 tls/qopensslbackend.dll，否则启动崩溃"
-    },
-    "vdd": {
-      "reason": "本机已存在两个第三方虚拟显示适配器，再加第三个会让 output_name 选择失真",
-      "unblock": "手机端 T1/T3 测试证明黑边不可接受后再评估"
     }
   },
   "notes": {

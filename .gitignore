@@ -20,3 +20,8 @@ repo-kit.sarif
 _site/
 dist/
 coverage/
+
+# 随包第三方二进制：构建时按 manifest 下载并校验，不入 git
+payload/vendor/*.zip
+payload/vendor/*.msi
+payload/vendor/*.exe
