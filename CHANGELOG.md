@@ -8,6 +8,8 @@
 - 多设备分辨率预设 `payload/conf/vdd-resolutions.txt`：按设备名列出 `2772x1272`(Find X9 Pro) / `2868x1320`(iPhone 17 Pro Max) / `2732x2048@120`(iPad Pro M1) / `1920x1080`(Switch 底座) / `3840x2160`(电视 4K)，安装时并入 `vdd_settings.xml`，不在列表里的分辨率会被清理。
 - 救援脚本 `payload/scripts/Restore-Display.ps1` + `payload/恢复显示.cmd`：虚拟屏异常时强制 `Enable-PnpDevice` 并 `DisplaySwitch /extend`，不改配置、可反复执行。
 - 踩坑页 `docs/虚拟屏配置不生效.md`：BOM 导致 XmlLite 解析失败 → 虚拟屏恒为 800x600；含三个"看起来该有效、实际全无效"的假象与管道诊断手段。
+- 构建链路 `tools/build/Fetch-Vendor.ps1` + `tools/build/Build-Package.ps1`：按 manifest 拉取并校验随包资产（Sunshine msi / Moonlight 便携版 / VDD 驱动 / 许可证全文），组装成自包含离线 zip。带断点续传与多轮重试，应对 GitHub CDN 的间歇 502。
+- 文档 `docs/出包流程.md`：两条命令出包、产物验证判据、断流与 `NativeCommandError` 的坑。
 
 ### 变更
 
@@ -18,8 +20,10 @@
 
 ### 说明
 
-- 本版仍不含可安装产物：真机串流成立，但局域网拓扑（业务网段 `10.4.240.0/23`）尚未验证，按 `DEVELOPMENT.md` 的规则 zip 不可发布。
+- 本版首次产出完整离线包 `dist/sunshine-lan-streaming-0.4.0.zip`（125.47 MB，SHA256 `d5495429…`），自包含 Sunshine msi、Moonlight 便携版、VDD 驱动包与 GPL-3.0/MIT 许可证全文。已实测：解压后 `Install.ps1 -DryRun` 能在包内找到 msi 与 manifest，13 项关键文件齐全，中文文件名正常。
+- 仍不对外发布：真机串流成立，但局域网拓扑（业务网段 `10.4.240.0/23`）尚未验证，按 `DEVELOPMENT.md` 的规则 zip 不可发布。
 - 虚拟屏配置生效依赖两点已固化：写入必须无 BOM；配置变更后必须重建 PnP 设备节点才能让驱动重读（`disable/enable` 不够）。
+- `payload/vendor/*.zip|msi|exe` 与 `dist/` 不入 git；`payload/licenses/*.txt` 入库，因为 GPL-3.0 再分发要求随附全文。
 
 ## v0.3.0 — 2026-11-24
 

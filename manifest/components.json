@@ -15,6 +15,7 @@
       "asset": "Sunshine-Windows-AMD64-installer.msi",
       "url": "https://github.com/LizardByte/Sunshine/releases/download/v2026.516.143833/Sunshine-Windows-AMD64-installer.msi",
       "sha256": "e7208b11a4ab9dd89871133a054bbb8dc55dfbba408227b0eccab22c60b273a2",
+      "size_bytes": 24465408,
       "license": "GPL-3.0",
       "source_url": "https://github.com/LizardByte/Sunshine/tree/v2026.516.143833",
       "license_url": "https://github.com/LizardByte/Sunshine/blob/v2026.516.143833/LICENSE",
@@ -28,6 +29,7 @@
       "asset": "MoonlightPortable-x64-6.2.0.zip",
       "url": "https://github.com/moonlight-stream/moonlight-qt/releases/download/v6.2.0/MoonlightPortable-x64-6.2.0.zip",
       "sha256": "6f91d268b41ed5ca8066d9d7578dc403b8db190991ff48f00b1700465f8f7ebf",
+      "size_bytes": 37242232,
       "license": "GPL-3.0",
       "source_url": "https://github.com/moonlight-stream/moonlight-qt/tree/v6.2.0",
       "license_url": "https://github.com/moonlight-stream/moonlight-qt/blob/v6.2.0/LICENSE",
@@ -47,7 +49,7 @@
       "license_url": "https://github.com/VirtualDrivers/Virtual-Display-Driver/blob/25.7.23/LICENSE",
       "verified_at": "2026-11-24",
       "hash_source": "winget 清单元数据（winget show --id VirtualDrivers.Virtual-Display-Driver），非 Release 页手抄",
-      "install": "随包分发；解包后用 pnputil /add-driver <inf> /install，安装时零网络",
+      "install": "随包分发；解包后用包内 devcon 执行 `devcon install <inf> Root\\MttVDD`。不能用 pnputil /add-driver——它只把驱动包放进驱动库，不创建 ROOT 枚举的设备节点，设备管理器里不会出现虚拟屏。安装时零网络",
       "why": "独立的 IddCx 虚拟显示器驱动，不受向日葵/RayLink 服务启停影响；配合 dd_configuration_option=ensure_only_display 实现连上即切虚拟屏、物理屏息屏"
     }
   },

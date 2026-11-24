@@ -67,14 +67,26 @@ function Info($msg) { Write-Host "         $msg" -ForegroundColor Gray }
 $IsAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
     [Security.Principal.WindowsBuiltInRole]::Administrator)
 
-$Root = Split-Path $PSScriptRoot -Parent          # payload\
+$Root = Split-Path $PSScriptRoot -Parent          # payload\（发行 zip 解压后即为包根）
 $Repo = Split-Path $Root -Parent                   # 仓库根（本地开发时）
+
+# 安装包查找顺序：显式 -MsiPath > 随包 vendor > dist\cache
+# 发行 zip 解压后没有 dist 目录，所以 vendor 必须排在 dist\cache 前面，
+# 否则用户解压后直接双击 安装.cmd 会报"找不到安装包"。
 if (-not $MsiPath) {
-    $MsiPath = Join-Path $Repo 'dist\cache\Sunshine-Windows-AMD64-installer.msi'
+    $candidates = @(
+        (Join-Path $Root 'vendor\Sunshine-Windows-AMD64-installer.msi'),
+        (Join-Path $Repo 'dist\cache\Sunshine-Windows-AMD64-installer.msi')
+    )
+    foreach ($c in $candidates) { if (Test-Path -LiteralPath $c) { $MsiPath = $c; break } }
+    if (-not $MsiPath) { $MsiPath = $candidates[-1] }
 }
 if (-not $ManifestPath) {
-    foreach ($c in @((Join-Path $Repo 'manifest\components.json'), (Join-Path $Root 'manifest\components.json'))) {
-        if (Test-Path $c) { $ManifestPath = $c; break }
+    foreach ($c in @(
+        (Join-Path $Root 'manifest\components.json'),   # 发行 zip 内
+        (Join-Path $Repo 'manifest\components.json')
+    )) {
+        if (Test-Path -LiteralPath $c) { $ManifestPath = $c; break }
     }
 }
 
