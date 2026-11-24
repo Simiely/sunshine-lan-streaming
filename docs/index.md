@@ -48,6 +48,7 @@ related: []
 
 - [显示拓扑卡死](显示拓扑卡死.md) — `ensure_only_display` 阻塞两分钟的根因与规避
 - [配置写入覆盖](配置写入覆盖.md) — `POST /api/config` 整体替换，会把 `upnp` 悄悄改回 `enabled`
+- [虚拟屏配置不生效](虚拟屏配置不生效.md) — `vdd_settings.xml` 带 BOM 即解析失败，虚拟屏恒为 800x600
 
 ## 边界
 

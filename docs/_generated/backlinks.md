@@ -26,6 +26,7 @@ related: []
 | `streaming.config-inventory` | [用 API 改一个键，会把其余键一起清空](../配置写入覆盖.md) | see-also | `docs/配置写入覆盖.md` |
 | `streaming.config-inventory` | [局域网串流上线前要过的六道检查](../部署清单.md) | see-also | `docs/部署清单.md` |
 | `streaming.config-inventory` | [L1 通过：三项配置生效，一条判据被证伪](../reports/2026-11-24-安装验证.md) | spawned-from（反向：spawned） | `docs/reports/2026-11-24-安装验证.md` |
+| `streaming.config-inventory` | [改了 vdd_settings.xml 却不生效，虚拟屏永远停在 800x600](../虚拟屏配置不生效.md) | applies-to（反向：has-pitfall；来自 applies_to 字段） | `docs/虚拟屏配置不生效.md` |
 | `streaming.deploy-checklist` | [用 API 改一个键，会把其余键一起清空](../配置写入覆盖.md) | applies-to（反向：has-pitfall；来自 applies_to 字段） | `docs/配置写入覆盖.md` |
 | `streaming.display-topology-freeze` | [局域网串流优先留在官方分支，只有需要虚拟显示器才换分支](../分支选型.md) | see-also | `docs/分支选型.md` |
 | `streaming.display-topology-freeze` | [官方只有一个版本适合长期停留：2026.516](../版本矩阵.md) | depends-on（反向：depended-on-by） | `docs/版本矩阵.md` |
@@ -36,3 +37,5 @@ related: []
 | `streaming.virtual-display` | [局域网串流上线前要过的六道检查](../部署清单.md) | see-also | `docs/部署清单.md` |
 | `streaming.virtual-display` | [用 ensure_only_display 会让断开串流时卡死两分钟](../显示拓扑卡死.md) | applies-to（反向：has-pitfall；来自 applies_to 字段） | `docs/显示拓扑卡死.md` |
 | `streaming.virtual-display` | [用 ensure_only_display 会让断开串流时卡死两分钟](../显示拓扑卡死.md) | see-also | `docs/显示拓扑卡死.md` |
+| `streaming.virtual-display` | [改了 vdd_settings.xml 却不生效，虚拟屏永远停在 800x600](../虚拟屏配置不生效.md) | applies-to（反向：has-pitfall；来自 applies_to 字段） | `docs/虚拟屏配置不生效.md` |
+| `streaming.virtual-display` | [改了 vdd_settings.xml 却不生效，虚拟屏永远停在 800x600](../虚拟屏配置不生效.md) | see-also | `docs/虚拟屏配置不生效.md` |

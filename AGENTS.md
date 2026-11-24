@@ -1,6 +1,6 @@
 # AGENTS.md · sunshine-lan-streaming 项目规则
 
-> 📌 **文档基线**：2026-11-24（`ac0184b`）—— 增加配置基线与发行骨架（v0.2.0，knowledge profile）
+> 📌 **文档基线**：2026-11-24（`b81f0cd`）—— 虚拟屏方案落地、多设备分辨率预设与 BOM 踩坑页（v0.4.0，knowledge profile）
 > **更新文档后请更新此行**（日期 + 新 commit hash），并在 CHANGELOG 追加版本
 
 本仓库是 sunshine-lan-streaming 的知识库。回答相关问题前先读这份，再读 [docs/index.md](docs/index.md)。
@@ -35,8 +35,8 @@ python -m pip install -r requirements.txt   # 文档检查依赖
 
 ## 当前规模
 
-- 页面：11（critical=7）
-- 按 type：explanation=4, how-to=1, reference=6
+- 页面：12（critical=8）
+- 按 type：explanation=5, how-to=1, reference=6
 - 词表版本：2.9.1
 
 ## 边界
