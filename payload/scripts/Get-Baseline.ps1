@@ -20,10 +20,14 @@
 [CmdletBinding()]
 param(
     [switch]$Json,
-    [switch]$Quiet
+    [switch]$Quiet,
+    [string]$OutFile
 )
 
 $ErrorActionPreference = 'Continue'
+# 共享层：设备 ID、指纹、配置覆盖（只读，不改系统）
+. (Join-Path $PSScriptRoot '_Baseline.ps1')
+$DeviceCfg = Get-DeviceConfig
 $rows = New-Object System.Collections.ArrayList
 
 function Add-Row {
@@ -83,7 +87,11 @@ $vigem = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Unins
 if ($vigem) { Add-Row 'A-04' '虚拟手柄驱动' "$($vigem.DisplayVersion)" '✅' '' }
 else { Add-Row 'A-04' '虚拟手柄驱动' '未安装' '⏸' '无手柄需求则不必装' }
 
-$gpu = Get-CimInstance Win32_VideoController | Where-Object { $_.Name -match 'NVIDIA|AMD|Radeon' } | Select-Object -First 1
+# GPU 白名单来自设备配置；默认排除第三方虚拟适配器，避免把它当成宿主显卡
+$gpuPattern = [string](Get-DeviceConfigValue -Name 'gpu_vendor_pattern' -Default '(?i)NVIDIA|AMD|Radeon|Intel' -Config $DeviceCfg)
+$gpu = Get-CimInstance Win32_VideoController |
+       Where-Object { $_.Name -match $gpuPattern -and $_.Name -notmatch '(?i)OrayIddDriver|RayLink|Virtual Display|MttVDD' } |
+       Select-Object -First 1
 if ($gpu) { Add-Row 'A-05' '显卡驱动' "$($gpu.DriverVersion)" '✅' $gpu.Name }
 
 # ---------- B 服务 ----------
@@ -125,7 +133,8 @@ Add-Row 'C-03' '路由器端口转发' '需人工核对' '❓' '登录路由器�
 # ---------- D 网络 ----------
 $ips = @(Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
          Where-Object { $_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.254.*' })
-$biz = $ips | Where-Object { $_.InterfaceAlias -notmatch 'ZeroTier|VMware|Loopback|vgate|本地连接' } | Select-Object -First 1
+$nicDeny = [string](Get-DeviceConfigValue -Name 'nic_deny_pattern' -Default 'ZeroTier|VMware|Loopback|vgate|本地连接' -Config $DeviceCfg)
+$biz = $ips | Where-Object { $_.InterfaceAlias -notmatch $nicDeny } | Select-Object -First 1
 if ($biz) {
     # 只能证明宿主侧地址已识别；"与客户端同一广播域"必须由客户端侧验证，不能在这里判绿
     Add-Row 'D-01' '业务网段' "$($biz.IPAddress)/$($biz.PrefixLength)" '❓' "$($biz.InterfaceAlias)；需客户端侧确认同网段"
@@ -239,7 +248,12 @@ if ($coding) {
 
 # ---------- G 冲突软件 ----------
 $map = @{ 'G-01' = @('AweSunService', '向日葵'); 'G-02' = @('RayLinkService', 'RayLink'); 'G-03' = @('ToDesk_Service', 'ToDesk') }
-foreach ($k in @('G-01', 'G-02', 'G-03')) {
+# 设备可追加/覆盖抢捕获服务名，不再让这台机器的三件套成为全局真相
+$extraConflicts = Get-DeviceConfigValue -Name 'conflict_services' -Default @() -Config $DeviceCfg
+foreach ($e in @($extraConflicts)) {
+    if ($e.id -and $e.service) { $map[[string]$e.id] = @([string]$e.service, [string]$e.label) }
+}
+foreach ($k in @($map.Keys | Sort-Object)) {
     $name = $map[$k][0]; $label = $map[$k][1]
     $s = Get-Service $name -ErrorAction SilentlyContinue
     if (-not $s) { Add-Row $k $label '未安装' '✅' '' }
@@ -274,13 +288,23 @@ $ok = @($rows | Where-Object { $_.Status -eq '✅' }).Count
 $warn = @($rows | Where-Object { $_.Status -eq '⚠️' }).Count
 $unk = @($rows | Where-Object { $_.Status -in @('❓', '⏸') }).Count
 
+$result = [pscustomobject]@{
+    timestamp   = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
+    device_id   = Get-DeviceId
+    host        = $env:COMPUTERNAME
+    fingerprint = Get-DeviceFingerprint
+    summary     = [pscustomobject]@{ ok = $ok; warn = $warn; unknown = $unk; total = $rows.Count }
+    checks      = $rows
+}
+$jsonText = $result | ConvertTo-Json -Depth 8
+if ($OutFile) {
+    $dir = Split-Path -Parent $OutFile
+    if ($dir -and -not (Test-Path -LiteralPath $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+    [System.IO.File]::WriteAllText($OutFile, $jsonText, (New-Object System.Text.UTF8Encoding($false)))
+    Write-Host "体检快照已写入: $OutFile"
+}
 if ($Json) {
-    [pscustomobject]@{
-        timestamp = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
-        host      = $env:COMPUTERNAME
-        summary   = [pscustomobject]@{ ok = $ok; warn = $warn; unknown = $unk; total = $rows.Count }
-        checks    = $rows
-    } | ConvertTo-Json -Depth 5
+    $jsonText
     exit 0
 }
 

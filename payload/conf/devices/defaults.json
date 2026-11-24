@@ -1,0 +1,11 @@
+{
+  "_comment": "跨设备默认配置。某台机器需要偏离时，在同目录放 <device_id>.json 覆盖，不要改这里。",
+  "anchor_resolution": "1920x1080",
+  "physical_resolution": null,
+  "expected_initial_resolution": null,
+  "nic_deny_pattern": "ZeroTier|VMware|Loopback|vgate|本地连接",
+  "conflict_services": [],
+  "other_idd_pattern": "(?i)raylink|oray|sunlogin|parsec|spacedesk|usbmmidd|iddsample|duet|twomon",
+  "gpu_vendor_pattern": "(?i)NVIDIA|AMD|Radeon|Intel",
+  "vdd_output_strategy": "snapshot-diff"
+}

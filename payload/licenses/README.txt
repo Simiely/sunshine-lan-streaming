@@ -8,5 +8,5 @@
 - vdd 25.7.23  →  MIT.txt
     source: https://github.com/VirtualDrivers/Virtual-Display-Driver/tree/25.7.23
 
-生成时间: 2026-11-24 17:52:32
+生成时间: 2026-11-24 23:11:57
 由 tools/build/Fetch-Vendor.ps1 生成，请勿手工编辑。

@@ -1,0 +1,10 @@
+{
+  "_comment": "Redmi Book Pro 15 2023 / AMD Ryzen 7 7840HS / Radeon 780M / 3200x2000 单屏。状态：仅完成装机前基线，未装 Sunshine。",
+  "anchor_resolution": "1920x1080",
+  "physical_resolution": "3200x2000",
+  "expected_initial_resolution": null,
+  "nic_deny_pattern": "ZeroTier|VMware|Loopback|vgate|本地连接",
+  "conflict_services": [],
+  "gpu_vendor_pattern": "(?i)AMD|Radeon",
+  "vdd_output_strategy": "snapshot-diff"
+}

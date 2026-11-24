@@ -16,7 +16,7 @@
   "statuses": ["draft", "active", "resolved", "superseded", "archived"],
   "tiers": ["normal", "critical"],
   "confidences": ["low", "medium", "high"],
-  "topics": ["governance", "development", "streaming"],
+  "topics": ["governance", "development", "streaming", "hardware"],
   "relations": {
     "depends-on": {
       "direction": "directed",

@@ -42,6 +42,8 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+# 共享层：设备 ID 与按设备隔离的状态目录（见 docs/设备硬件标准.md）
+. (Join-Path $PSScriptRoot '_Baseline.ps1')
 $script:StepNo = 0
 $script:Failures = @()
 $script:Warnings = @()
@@ -275,11 +277,10 @@ Step "写入基线配置"
 if (-not (Test-Path $ConfigDir)) { New-Item -ItemType Directory -Path $ConfigDir -Force | Out-Null }
 if (-not (Test-Path $Conf)) { New-Item -ItemType File -Path $Conf -Force | Out-Null }
 
-$baseline = [ordered]@{
-    'origin_web_ui_allowed'    = 'lan'
-    'upnp'                     = 'disabled'
-    'dd_configuration_option'  = 'disabled'
-}
+# 用共享 profile 一次写全：locale=zh（Web UI 中文）+ 网络/显示基线。
+# 不再在本地复制三键清单——两份清单一旦漂移，装完的机器就会出现"配置看似写了却没生效"。
+$baseline = Get-BaselineProfile -Name physical
+Info "基线键: $(@($baseline.Keys) -join ', ')"
 
 $lines = @()
 if ((Get-Item $Conf).Length -gt 0) { $lines = Get-Content $Conf -Encoding UTF8 }
@@ -302,7 +303,7 @@ if ($changed -gt 0) {
     [System.IO.File]::WriteAllLines($Conf, [string[]]$lines, $utf8)
     Ok "已写入 $changed 项"
 } else {
-    Ok "三项均已是目标值"
+    Ok "全部基线键均已是目标值"
 }
 
 # ---------- 8. 启动服务 ----------
@@ -380,7 +381,7 @@ Write-Host "  密码   : $Password" -ForegroundColor White
 Write-Host ""
 Info "自签证书会提示不安全，属正常。"
 
-$credPath = Join-Path $env:ProgramData 'sunshine-lan-streaming'
+$credPath = Get-DeviceStateRoot
 New-Item -ItemType Directory -Path $credPath -Force | Out-Null
 $credFile = Join-Path $credPath 'credentials.txt'
 @(
@@ -398,6 +399,7 @@ $ports = @()
 if ($listen) { $ports = @($listen.LocalPort | Sort-Object -Unique) }
 $jsonResult = [ordered]@{
     timestamp           = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
+    device_id           = Get-DeviceId
     host                = $env:COMPUTERNAME
     version             = $v
     install_dir         = $InstallDir

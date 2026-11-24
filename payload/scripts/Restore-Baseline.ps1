@@ -61,11 +61,24 @@ Assert-Admin -Hint '请双击 payload\恢复基线.cmd；切换虚拟屏方案�
 # 从 vdd 方案退回来时，conf 里的 output_name 是虚拟屏；若原样保留，
 # 服务重启后仍然去捕获那块屏，"恢复基线"就没起到恢复作用。
 # 只有在调用方没有显式指定 -OutputName 时才做这个自动纠正，并明确打印出来。
+# 从 .cmd 或 Start-Process 传参时，围绕 \\.\DISPLAYn 的单/双引号会被保留成字面量，
+# 写进 sunshine.conf 后 Sunshine 认不出这块屏。统一在这里剥掉包裹引号。
 $effOutputName = $OutputName
+if ($effOutputName) {
+    $effOutputName = ([string]$effOutputName).Trim()
+    if ($effOutputName.Length -ge 2) {
+        $first = $effOutputName[0]
+        $last  = $effOutputName[$effOutputName.Length - 1]
+        if (($first -eq "'" -and $last -eq "'") -or ($first -eq '"' -and $last -eq '"')) {
+            $effOutputName = $effOutputName.Substring(1, $effOutputName.Length - 2).Trim()
+            Write-Host "纠正参数  output_name 去掉包裹引号 → $effOutputName"
+        }
+    }
+}
 if (-not $effOutputName -and $Profile -eq 'physical') {
     $cur = Read-ConfMap -Path $Conf
     $curName = if ($cur.Contains('output_name')) { $cur['output_name'] } else { $null }
-    $st = Get-DisplayState -Path (Join-Path 'C:\ProgramData\sunshine-lan-streaming' 'display-state.json')
+    $st = Get-DisplayState -Path (Join-Path (Get-DeviceStateRoot) 'display-state.json')
 
     if ($curName -and $st) {
         $vddName = if ($st.PSObject.Properties.Name -contains 'vdd_output') { $st.vdd_output } else { $null }
@@ -135,6 +148,18 @@ if (-not $NoRestart) {
 }
 
 # ---------- 4 合并写回 + 回读 ----------
+# vdd profile 下清掉历史遗留的 prep 切屏命令：prep 在 configure_display 与
+# probe_encoders 之后才执行，且 disabled 会触发后台回滚，实测会让连接卡死。
+# 见 docs/prep命令改不了捕获屏.md。
+if ($Profile -eq 'vdd') {
+    $curMap = Read-ConfMap -Path $Conf
+    if ($curMap.Contains('global_prep_cmd')) {
+        $curMap.Remove('global_prep_cmd')
+        Write-ConfMap -Path $Conf -Map $curMap
+        Write-Host '清理     已移除 global_prep_cmd（prep 切屏方案已否决）'
+    }
+}
+
 $bad = Set-ConfKeys -Path $Conf -Keys $keys
 if ($bad.Count -eq 0) {
     Write-Host '回读校验  OK，目标键落盘正确'

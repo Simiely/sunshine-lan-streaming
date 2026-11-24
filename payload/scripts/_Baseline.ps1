@@ -19,6 +19,67 @@
 $script:SunshineService = 'SunshineService'
 $script:RequiredPorts   = @(47984, 47989, 47990)
 
+# ---------- 设备维度 ----------
+# 一台机器一个 ID 与一个状态目录，避免多设备互相覆盖。
+# COMPUTERNAME 用于命名，UUID 用于识别克隆镜像（见 docs/设备硬件标准.md）。
+$script:DeviceIdCache = $null
+function Get-DeviceId {
+    if ($script:DeviceIdCache) { return $script:DeviceIdCache }
+    $id = ([string]$env:COMPUTERNAME).ToLowerInvariant() -replace '[^a-z0-9-]', '-'
+    if (-not $id) { $id = 'unknown-host' }
+    $script:DeviceIdCache = $id
+    return $id
+}
+
+function Get-DeviceStateRoot {
+    return (Join-Path $env:ProgramData ("sunshine-lan-streaming\devices\" + (Get-DeviceId)))
+}
+
+function Get-DeviceFingerprint {
+    $cs  = Get-CimInstance Win32_ComputerSystemProduct -ErrorAction SilentlyContinue
+    $cpu = Get-CimInstance Win32_Processor -ErrorAction SilentlyContinue | Select-Object -First 1
+    $os  = Get-CimInstance Win32_OperatingSystem -ErrorAction SilentlyContinue
+    # 虚拟适配器不算宿主 GPU，否则 AMD / Intel 机器会被 Oray / RayLink 顶掉
+    $gpus = @(Get-CimInstance Win32_VideoController -ErrorAction SilentlyContinue |
+              Where-Object { $_.Name -notmatch '(?i)oray|raylink|virtual display|mttvdd|parsec|spacedesk' } |
+              ForEach-Object { [pscustomobject]@{ name = $_.Name; driver = $_.DriverVersion } })
+    return [pscustomobject]@{
+        device_id = Get-DeviceId
+        hostname  = $env:COMPUTERNAME
+        uuid      = [string]$cs.UUID
+        vendor    = [string]$cs.Vendor
+        model     = [string]$cs.Name
+        cpu       = [string]$cpu.Name
+        os        = [string]$os.Caption
+        os_build  = [string]$os.BuildNumber
+        gpu       = @($gpus)
+    }
+}
+
+<#
+    设备配置：conf\devices\defaults.json + conf\devices\<device_id>.json，
+    后者覆盖前者。所有原本写死在本机的值都从这里取，未配置时回落到 $Default。
+#>
+function Get-DeviceConfig {
+    $dir = Join-Path (Split-Path $PSScriptRoot -Parent) 'conf\devices'
+    $cfg = @{}
+    foreach ($f in @((Join-Path $dir 'defaults.json'), (Join-Path $dir ((Get-DeviceId) + '.json')))) {
+        if (-not (Test-Path -LiteralPath $f)) { continue }
+        try {
+            $j = Get-Content -LiteralPath $f -Raw -Encoding UTF8 | ConvertFrom-Json
+            foreach ($p in $j.PSObject.Properties) { $cfg[$p.Name] = $p.Value }
+        } catch { Write-Host "WARN 设备配置读取失败 $f ：$($_.Exception.Message)" }
+    }
+    return $cfg
+}
+
+function Get-DeviceConfigValue {
+    param([string]$Name, $Default = $null, $Config = $null)
+    if (-not $Config) { $Config = Get-DeviceConfig }
+    if ($Config.ContainsKey($Name)) { return $Config[$Name] }
+    return $Default
+}
+
 function Get-SunshineConfPath {
     return (Join-Path $env:ProgramFiles 'Sunshine\config\sunshine.conf')
 }
@@ -54,6 +115,10 @@ function Get-BaselineProfile {
 
     $set = [ordered]@{}
 
+    # Web UI 中文：装完即生效，不需要用户进设置页手选。
+    # 真机实证见 docs/reports/2026-11-24-安卓真机验证.md 中 sunshine.conf 的 locale = zh。
+    $set['locale'] = 'zh'
+
     switch ($Name) {
         'physical' {
             # 不接管显示拓扑。dd_configuration_option 为 disabled 时，其余 dd_* 全部失效。
@@ -65,14 +130,18 @@ function Get-BaselineProfile {
             $set['dd_hdr_option']           = 'disabled'
         }
         'vdd' {
-            # 捕获虚拟屏；连上时激活虚拟屏并禁用其余所有屏，断流立即回滚。
+            # 切屏交给 Sunshine 原生 ensure_only_display：它在 configure_display
+            # 阶段执行，早于 probe_encoders，时序正确。
+            # 不要改成 disabled——那会触发 revert_configuration() 后台回滚，
+            # 与编码器探测抢设备，实测让连接卡死（docs/prep命令改不了捕获屏.md）。
+            # output_name 必须是稳定的 device_id（GUID），不是 \\.\DISPLAYn：
+            # 编号在设备重新启用后会变，导致找不到屏、静默回退物理屏。
             $set['origin_web_ui_allowed']       = 'lan'
             $set['upnp']                        = 'disabled'
             $set['dd_configuration_option']     = 'ensure_only_display'
             $set['dd_resolution_option']        = 'auto'
             $set['dd_refresh_rate_option']      = 'auto'
             $set['dd_hdr_option']               = 'disabled'
-            $set['dd_config_revert_on_disconnect'] = 'enabled'
         }
     }
 
@@ -274,8 +343,9 @@ function Find-VddOutput {
         if ($k.Count -eq 1) { return $k[0].Output }
     }
 
-    # 第三方虚拟屏品牌黑名单：这些是别人的 IDD，绝不能被当成我们自己装的 VDD
-    $otherIdd = '(?i)raylink|oray|sunlogin|parsec|spacedesk|usbmmidd|iddsample|duet|twomon'
+    # 第三方虚拟屏品牌黑名单：这些是别人的 IDD，绝不能被当成我们自己装的 VDD。
+    # 名单来自设备配置，不再把第一台机器上装的软件当成全局真相。
+    $otherIdd = [string](Get-DeviceConfigValue -Name 'other_idd_pattern' -Default '(?i)raylink|oray|sunlogin|parsec|spacedesk|usbmmidd|iddsample|duet|twomon')
     $pool = @($Current | Where-Object { $_.Adapter -notmatch $otherIdd })
     if ($pool.Count -eq 0) { $pool = $Current }
 
@@ -293,11 +363,17 @@ function Find-VddOutput {
         if ($byRes.Count -eq 1) { return $byRes[0].Output }
     }
 
-    $highNum = @($live | Where-Object {
-        $m = [regex]::Match([string]$_.Output, 'DISPLAY(\d+)$')
-        $m.Success -and [int]$m.Groups[1].Value -ge 10
-    })
-    if ($highNum.Count -eq 1) { return $highNum[0].Output }
+    # DISPLAYn>=10 是第一台机器的经验值，换机后编号取决于已有输出数量。
+    # 默认关闭；只有设备显式声明 vdd_output_strategy = display-number 才启用。
+    $strategy = [string](Get-DeviceConfigValue -Name 'vdd_output_strategy' -Default 'snapshot-diff')
+    if ($strategy -eq 'display-number') {
+        $minNum = [int](Get-DeviceConfigValue -Name 'vdd_display_number_min' -Default 10)
+        $highNum = @($live | Where-Object {
+            $m = [regex]::Match([string]$_.Output, 'DISPLAY(\d+)$')
+            $m.Success -and [int]$m.Groups[1].Value -ge $minNum
+        })
+        if ($highNum.Count -eq 1) { return $highNum[0].Output }
+    }
 
     return $null
 }

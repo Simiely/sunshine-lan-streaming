@@ -6,7 +6,11 @@ rem Admin required: install a display driver, write Program Files, restart servi
 net session >nul 2>&1
 if %errorlevel% neq 0 (
     echo Requesting administrator privileges, click "Yes" in the prompt...
-    powershell -NoProfile -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
+    if "%*"=="" (
+        powershell -NoProfile -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
+    ) else (
+        powershell -NoProfile -Command "Start-Process -FilePath '%~f0' -ArgumentList '%*' -Verb RunAs"
+    )
     exit /b
 )
 

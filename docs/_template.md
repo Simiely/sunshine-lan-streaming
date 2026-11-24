@@ -8,7 +8,6 @@ status: draft
 owner: "@simiely"
 tier: normal
 topics: [governance]
-defines:
 source_type: doc
 source: AGENTS.md
 last_reviewed: 2026-11-24

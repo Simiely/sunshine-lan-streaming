@@ -2,7 +2,7 @@
   "schema_version": 1,
   "package": {
     "name": "sunshine-lan-streaming",
-    "version": "0.4.0",
+    "version": "0.5.5",
     "target": "windows-amd64",
     "min_os": "10.0.19041",
     "scope": "单台 Windows 宿主、仅局域网、Moonlight 客户端"
@@ -52,6 +52,24 @@
       "install": "随包分发；解包后用包内 devcon 执行 `devcon install <inf> Root\\MttVDD`。不能用 pnputil /add-driver——它只把驱动包放进驱动库，不创建 ROOT 枚举的设备节点，设备管理器里不会出现虚拟屏。安装时零网络",
       "why": "独立的 IddCx 虚拟显示器驱动，不受向日葵/RayLink 服务启停影响；配合 dd_configuration_option=ensure_only_display 实现连上即切虚拟屏、物理屏息屏"
     }
+  },
+  "device_profiles": {
+    "schema_version": 1,
+    "config_dir": "conf/devices",
+    "id_rule": "lowercase(COMPUTERNAME), non [a-z0-9-] replaced by -",
+    "state_dir": "C:\\ProgramData\\sunshine-lan-streaming\\devices\\<device_id>",
+    "known": [
+      {
+        "device_id": "redmibookpro15x",
+        "label": "Redmi Book Pro 15 2023",
+        "gpu": "AMD Radeon 780M Graphics",
+        "encoder": "amf (expected, not yet streamed)",
+        "physical_resolution": "3200x2000",
+        "status": "baseline-only",
+        "report": "docs/reports/2026-11-24-redmibookpro15x-本机基线.md"
+      }
+    ],
+    "note": "4070S 宿主的 COMPUTERNAME 未记录在旧报告中，device_id 待补；不要猜。"
   },
   "deferred": {
     "vigembus": {

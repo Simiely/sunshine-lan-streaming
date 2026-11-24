@@ -1,5 +1,108 @@
 # CHANGELOG
 
+## v0.5.5 — 2026-11-25
+
+### 修正（重要）
+
+- **否决 prep-cmd 切屏方案**：`global_prep_cmd` 在 `configure_display` 与 `probe_encoders` 之后才执行，且 `dd_configuration_option = disabled` 会触发 `revert_configuration()` 后台回滚，两者叠加导致 launch 卡在编码器探测、客户端连接失败。证据与源码依据见新踩坑页 `docs/prep命令改不了捕获屏.md`。
+- vdd profile 改回 Sunshine 原生 `ensure_only_display` + `output_name` 指向虚拟屏；虚拟屏设备常驻启用（probe 必须能枚举），桌面拓扑平时只留物理屏。`Restore-Baseline -Profile vdd` 会主动清理历史遗留的 `global_prep_cmd`。
+- **`output_name` 改用 `device_id`（GUID）而非 `\\.\DISPLAYn`**：编号在设备重新启用后会变（实测出现 52/53/54），Sunshine 找不到就静默回退物理屏，表现为"连接成功但分辨率怎么选都不变"。`Install-Vdd.ps1` 装完驱动会重启服务并从启动日志解析 VDD 的 GUID，取不到才退回编号并告警。
+- 新增架构图 `docs/assets/vdd-call-chain.svg`，嵌在踩坑页里说明平时状态、连接时序与两种绑定方式的差异。
+- 移除已否决方案的入口：`安装按需虚拟屏.cmd`、`Install-OnDemand.ps1`、`Switch-Vdd.ps1`。`docs/按需虚拟屏选型.md` 与实测报告同步改判。
+
+### 变更
+
+- 分辨率卡片改名：从「桌面 · 1080p」改为「设备名 + 分辨率@刷新率」，如 `Find X9 Pro 2772x1272@60`、`电视 4K 3840x2160@60`、`通用 2560x1440@60`。`Install-Cards.ps1` 会清理旧命名卡，卡片数 10（含原有 2 张）。
+- `Build-Package.ps1` 关键文件清单同步移除三个入口（17 项）；使用说明改回单一虚拟屏路线。
+
+### 说明
+
+- 本机当前状态：虚拟屏 `ROOT\DISPLAY\0001` 常驻启用，`DISPLAY54` 为 `output_name`，桌面只显示物理屏 `DISPLAY1`。`ensure_only_display` 的连接—断开循环仍**未验证**（无客户端配对，2026.516 无 launch API）。zip 不发布。
+
+## v0.5.4 — 2026-11-24
+
+### 新增
+
+- 分辨率卡片：`payload/scripts/Install-Cards.ps1` + `安装分辨率卡片.cmd`，在 `apps.json` 新增 6 张名字带分辨率的 Desktop 卡（720p / 1080p / 2K / 4K / 手机 / 平板）。Moonlight 按卡独立保存分辨率，点卡即用对应档位。脚本幂等，不覆盖已有同名卡。新页 `docs/安装Moonlight卡片.md`。
+- 本机实测：卡片数从 2 变 8，服务与常驻端口正常，显示仍在物理屏（平时状态）。
+
+### 说明
+
+- 卡片本身不写 prep 命令：v2026.516 的 `mode` 参数来自客户端，app prep 在 `configure_display` 与 `probe_encoders` 之后才跑，改不了显示模式。分辨率仍靠 `dd_resolution_option = auto` 切换，静态表是候选集。
+- 卡片分辨率存在 Moonlight 客户端侧，换设备要重设一遍；每个设备都要开「优化游戏设置」。真机验证未完成。
+
+## v0.5.3 — 2026-11-24
+
+### 新增
+
+- `docs/Moonlight卡片分辨率.md`：澄清"分辨率配置"指 Moonlight 每张应用卡片自带的分辨率选项。Sunshine 源码实证（`nvhttp.cpp` 的 `launch()` → `display_device.cpp` 的 `parse_resolution_option()`）表明：客户端请求的分辨率由 `dd_resolution_option = auto` 切到虚拟屏，且发生在 app 的 prep 命令之前、编码器探测之前——所以不能靠 app prep 切分辨率。
+
+### 变更
+
+- vdd profile 的 `dd_resolution_option` / `dd_refresh_rate_option` 从 `disabled` 恢复为 `auto`；`dd_configuration_option` 仍为 `disabled`（拓扑交给 prep 脚本）。静态表 `vdd-resolutions.txt` 是 auto 的候选集，两者缺一不可。
+- 本机 `sunshine.conf` 同步更新，`locale = zh` 与 `global_prep_cmd` 保留。
+
+### 说明
+
+- 客户端必须开「优化游戏设置」，否则源码明确警告"Resolution will not be changed"。表外档位会静默失败，画面停在原档——新客户端接入时先补表。仍未配对真机验证。
+
+## v0.5.2 — 2026-11-24
+
+### 新增
+
+- 按需虚拟屏：`payload/scripts/Switch-Vdd.ps1` + `Install-OnDemand.ps1` + `安装按需虚拟屏.cmd`。平时禁用虚拟屏设备、物理屏工作；Moonlight 连接时由 `global_prep_cmd` 的 `do` 启用虚拟屏并 `DisplaySwitch /external` 只留虚拟屏，断开时 `undo` 恢复物理屏并重新禁用虚拟屏。切屏权留在 Sunshine 之外，避开 `ensure_only_display` 的回滚阻塞。
+- `Get-BaselineProfile -Name vdd -SwitchScript` 生成 `global_prep_cmd`（JSON **数组**，`elevated=true`）并清空 `output_name`，让 Sunshine 捕获 `do` 切好后的主屏。
+- 决策页 `docs/按需虚拟屏选型.md`：对比 MTT VDD + 外部脚本与 vdisplay/SudoVDA，结论是先用已验证的驱动、不换栈；报告 `docs/reports/2026-11-24-redmibookpro15x-按需虚拟屏.md` 记录实测。
+- `vdd-resolutions.txt` 补 720p 与 1440x900 / 1920x1200（16:10 常用档）。
+
+### 变更
+
+- `dd_configuration_option` 在 vdd profile 改回 `disabled`，`dd_resolution_option` / `dd_refresh_rate_option` 同步改为 `disabled`（静态表方案，不让 Sunshine 动态改模式）。
+- `Build-Package.ps1` 解压自检新增两个脚本与 `安装按需虚拟屏.cmd`（16 项）；使用说明改为 A/B 两种虚拟屏模式。
+- 新脚本统一带 UTF-8 BOM——PS 5.1 读无 BOM 的中文注释会按 GBK 解析并报 `unexpected token`。
+
+### 说明
+
+- 本机实测：connect（提权）设备启用 → `DISPLAY52` 出现 → 只剩虚拟屏，退出码 0；disconnect（提权）恢复物理屏并禁用设备，退出码 0；非提权 connect 快速失败、物理屏保持。**未验证 Sunshine 会话触发**——2026.516 Web API 无 launch 端点，本机也无 Moonlight 配对，无法模拟连接。zip 仍不发布。
+
+## v0.5.1 — 2026-11-24
+
+### 新增
+
+- 「装完即用」：`Get-BaselineProfile` 两套 profile 都写入 `locale = zh`，Web UI 打开即中文；`Install.ps1` 改为写共享 profile 的完整键集（7 项），不再本地复制三键清单。第二台设备实测确认中文与完整配置落盘、无 BOM。
+- 单屏虚拟屏自动接入：`Install-Vdd.ps1` 在轮询 3 轮仍无新输出时自动执行一次 `DisplaySwitch.exe /extend`（可逆、不改配置），解决 AMD 780M 单屏笔记本上「设备节点 OK 但 DXGI 不枚举」的问题。新踩坑页 `docs/单屏装虚拟屏不枚举.md` + 报告 `docs/reports/2026-11-24-redmibookpro15x-虚拟屏安装.md`。
+
+### 变更
+
+- `Install-Vdd.ps1` 与 `Restore-Baseline.ps1` 写入 `output_name` 前剥掉首尾单/双引号——经 cmd / `Start-Process -ArgumentList` 传参时引号会变成字面量，导致 Sunshine 认不出输出屏。
+- `Build-Package.ps1` 的使用说明改为写明「装完即中文、配置写全、单屏自动 extend」。
+
+### 说明
+
+- 第二台设备已装好虚拟屏（`ROOT\DISPLAY\0001` OK，`\\.\DISPLAY36` 已接入桌面），配置切到 vdd 基线并保留 `locale = zh`。体检 13 合格 / 7 偏离 / 16 待测——合格数下降是 A-03 新增虚拟适配器与 E-03 切到 `ensure_only_display` 所致，属预期。仍未配对客户端，串流与局域网拓扑未验证，zip 不发布。
+
+## v0.5.0 — 2026-11-24
+
+### 新增
+
+- 设备维度：`payload/conf/devices/defaults.json` + `<device_id>.json` 覆盖层，把原先写死在第一台机器上的锚点分辨率、网卡正则、冲突服务、GPU 白名单、第三方 IDD 名单与虚拟屏识别策略外置。优先级为「命令行显式 > 设备专属 > defaults > 脚本兜底」。
+- `Get-DeviceId` / `Get-DeviceFingerprint` / `Get-DeviceStateRoot`（`_Baseline.ps1`）：设备 ID 取小写 `COMPUTERNAME`；指纹记录 UUID / 机型 / CPU / OS build / GPU；`Get-Baseline.ps1 -Json` 输出带 `device_id` 与 `fingerprint`，并支持 `-OutFile` 落盘快照。
+- 按设备隔离状态：`install-result.json` / `credentials.txt` / `display-state.json` / `install-vdd.log` 移到 `C:\ProgramData\sunshine-lan-streaming\devices\<device_id>\`，多机不再互相覆盖。
+- 文档三件套：`docs/设备硬件标准.md`、`docs/设备矩阵.md` 与第二台设备实测 `docs/reports/2026-11-24-redmibookpro15x-本机基线.md`（AMD 780M / 3200×2000 / 7 合格 8 偏离 21 待测）。`schema/taxonomy.json` 新增 `hardware` topic。
+- `manifest/components.json` 新增 `device_profiles` 顶层段；`package.version` → 0.5.0。
+
+### 变更
+
+- `Install-Vdd.ps1` 不再硬编码 VDD 的 SHA256 与 size，改为从 manifest 读取，恢复单一真源；删除「虚拟屏恒 800x600」的跨机无效断言。
+- `_Baseline.ps1` 的 `Find-VddOutput` 默认关闭 `DISPLAYn >= 10` 启发式，仅当设备显式声明 `vdd_output_strategy = display-number` 才启用。
+- `Build-Package.ps1` 的使用说明与解压自检不再硬编码 Moonlight 版本和许可证文件名，改为从 manifest 派生；自检新增 `conf\devices\defaults.json`。
+- 四个 `.cmd` 提权时透传 `%*`，此前从非管理员启动会丢失 `-DryRun` / `-Profile` / `-Uninstall`。
+- `docs/_template.md` 删除空 `defines:`（照抄会触发 `SCHEMA ERROR`）；`docs/配置清单.md` 明确状态列只记最近一次摘要，多机结论以设备报告为准。
+
+### 说明
+
+- 当前 zip 仍不发布：局域网拓扑尚未在任一台设备上验证；第二台设备仅完成装机前基线，未装 Sunshine。
+
 ## v0.4.0 — 2026-11-24
 
 ### 新增

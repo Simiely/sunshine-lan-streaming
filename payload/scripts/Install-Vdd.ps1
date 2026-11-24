@@ -48,13 +48,36 @@ param(
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot '_Baseline.ps1')
 
-# 与 manifest/components.json 的 vdd 条目保持一致；不一致即中止
-$ExpectedSha  = 'a701f2272e9fcf382849b24f913c6dd07597b3b1116525f2e90182f019609154'
-$ExpectedSize = 71225903
+# 显式 -OutputName 可能经 cmd / Start-Process 传入带引号的值，先剥掉包裹引号，
+# 否则写进 sunshine.conf 的会是 '\\.\DISPLAYn'（含引号），Sunshine 认不出输出屏。
+if ($OutputName) {
+    $OutputName = ([string]$OutputName).Trim()
+    if ($OutputName.Length -ge 2) {
+        $first = $OutputName[0]
+        $last  = $OutputName[$OutputName.Length - 1]
+        if (($first -eq "'" -and $last -eq "'") -or ($first -eq '"' -and $last -eq '"')) {
+            $OutputName = $OutputName.Substring(1, $OutputName.Length - 2).Trim()
+        }
+    }
+}
+
+# 版本、URL、SHA、size 只认 manifest（单一真源），脚本内不再复制一份。
+# 发行 zip 里 manifest 在包根，仓库里 manifest 在上一级目录。
+$manifestPath = @(
+    (Join-Path (Split-Path $PSScriptRoot -Parent) 'manifest\components.json'),
+    (Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) 'manifest\components.json')
+) | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+if (-not $manifestPath) {
+    Write-Host 'FAIL 找不到 manifest/components.json，无法校验 VDD 资产。'
+    exit 2
+}
+$m = Get-Content -LiteralPath $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
+$ExpectedSha  = [string]$m.components.vdd.sha256
+$ExpectedSize = [long]$m.components.vdd.size_bytes
 
 $Conf      = Get-SunshineConfPath
 $Sibling   = Join-Path $PSScriptRoot 'Restore-Baseline.ps1'
-$StateDir  = 'C:\ProgramData\sunshine-lan-streaming'
+$StateDir  = Get-DeviceStateRoot
 $StateFile = Join-Path $StateDir 'display-state.json'
 $WorkDir   = Join-Path $StateDir 'vdd'
 $ExitCode  = 0
@@ -315,10 +338,9 @@ if ((Test-Path -LiteralPath $vddConfSrc) -and -not (Test-Path -LiteralPath $VddC
 }
 
 # 打印配置里的模式清单，便于核对。
-# 注意：Windows 给虚拟屏选的初始分辨率由 hardcoded EDID 决定（实测恒为 800x600），
-# 与列表第一项无关，所以绝不能拿它当"配置是否生效"的判据。
-# 2026-11-24 实测：设备停在 800x600，而 XML 里 12 个目标模式全部正确暴露
-# （驱动日志 "Output target modes count: 12"，6 个分辨率 × 各自刷新率 + 全局 60）。
+# 初始分辨率由驱动版本与 EDID 决定，不再假设恒为 800x600；
+# 设备若需声明预期值，写在 conf/devices/<device_id>.json 的 expected_initial_resolution。
+# 判据是模式列表是否覆盖目标分辨率，不是当前分辨率等于列表第一项。
 $expectedRes = $null
 if (Test-Path -LiteralPath $VddConfTarget) {
     try {
@@ -465,12 +487,29 @@ if ($already.Count -gt 0) {
 $beforeOut = @($before | ForEach-Object { $_.Output })
 Write-Host '等待激活  轮询 DXGI 输出（最多 60 秒）…'
 
+# 单屏笔记本实测（redmibookpro15x，AMD 780M）：设备节点 OK、驱动已加载，
+# 但 IddCx 输出不会自动加入桌面，DXGI 一直只报物理屏。DisplaySwitch /extend
+# 一次就能让虚拟屏出现，且是可逆动作——不改变任何 Sunshine 配置。
+# 只在轮询若干轮后仍无新输出时执行一次，避免多屏机器上无谓改动布局。
+$extendTried = $false
+
 $deadline = (Get-Date).AddSeconds(60)
 $outputs  = @()
 $tick     = 0
 while ((Get-Date) -lt $deadline) {
     $tick++
     $outputs = @(Get-DxgiOutputs)
+
+    if (-not $extendTried -and $tick -ge 3) {
+        $newOut = @($outputs | Where-Object { $_.Output -notin $beforeOut })
+        if ($newOut.Count -eq 0) {
+            $extendTried = $true
+            Write-Host '          单屏拓扑未枚举出新输出，尝试 DisplaySwitch /extend…'
+            & DisplaySwitch.exe /extend 2>$null
+            Start-Sleep -Seconds 3
+            $outputs = @(Get-DxgiOutputs)
+        }
+    }
 
     if ($knownOut -and $outputs.Count -gt 0) {
         if (@($outputs | Where-Object { $_.Output -eq $knownOut }).Count -eq 1) {
@@ -530,8 +569,8 @@ foreach ($o in $outputs) {
 
 $target = $OutputName
 if (-not $target) {
-    # 不再传 ExpectedResolution：虚拟屏初始分辨率由 EDID 决定（恒 800x600），
-    # 拿配置第一项去比对只会永远对不上，反而干扰判定。
+    # 不传 ExpectedResolution：不同机器/驱动版本的初始分辨率并不相同，
+    # 默认走差集判定；显式 -OutputName 或设备配置优先。
     $target = Find-VddOutput -Current $outputs -BeforeOutputs $beforeOut -Known $knownOut
     if ($target -and -not $knownOut) {
         $hit = @($outputs | Where-Object { $_.Output -eq $target })[0]
@@ -579,6 +618,52 @@ Set-DisplayStateField -Path $StateFile -Name 'vdd_output' -Value $target | Out-N
 Write-Host ''
 
 # ---------- 6 应用 vdd 基线 ----------
+# output_name 不能写 \\.\DISPLAYn：编号在设备重新启用后会变，Sunshine 找不到
+# 目标屏就静默回退物理屏，表现为"分辨率怎么选都不变"（2026-11-24 实测）。
+# 这里从 Sunshine 启动日志里取虚拟屏的稳定 device_id（GUID）。
+# 服务需要先重启一次，日志才会打印包含 VDD 的最新设备列表。
+Write-Host ''
+Write-Host '稳定 ID   重启服务以获取 device_id…'
+try {
+    Restart-Service -Name $script:SunshineService -Force -ErrorAction Stop
+    (Get-Service -Name $script:SunshineService).WaitForStatus('Running', [TimeSpan]::FromSeconds(20))
+    Start-Sleep -Seconds 3
+} catch {
+    Write-Host "WARN 重启服务失败：$($_.Exception.Message)"
+}
+
+function Get-VddDeviceIdFromLog {
+    $log = Join-Path (Join-Path $env:ProgramFiles 'Sunshine\config') 'sunshine.log'
+    if (-not (Test-Path -LiteralPath $log)) { return $null }
+    $text = Get-Content -LiteralPath $log -Raw -Encoding UTF8
+    $marker = 'Currently available display devices:'
+    $idx = $text.LastIndexOf($marker)
+    if ($idx -lt 0) { return $null }
+    $start = $text.IndexOf('[', $idx)
+    if ($start -lt 0) { return $null }
+    $depth = 0
+    $end = -1
+    for ($i = $start; $i -lt $text.Length; $i++) {
+        if ($text[$i] -eq '[') { $depth++ }
+        elseif ($text[$i] -eq ']') { $depth--; if ($depth -eq 0) { $end = $i; break } }
+    }
+    if ($end -lt 0) { return $null }
+    try {
+        $devices = $text.Substring($start, $end - $start + 1) | ConvertFrom-Json
+        $vdd = @($devices | Where-Object { $_.friendly_name -match '(?i)VDD|Virtual Display' }) | Select-Object -First 1
+        if ($vdd -and $vdd.device_id) { return [string]$vdd.device_id }
+    } catch { }
+    return $null
+}
+
+$stableId = Get-VddDeviceIdFromLog
+if ($stableId) {
+    Write-Host "稳定 ID   $stableId（friendly_name 含 VDD）"
+    $target = $stableId
+} else {
+    Write-Host "WARN 日志里没有 VDD 的 device_id，退回 $target —— 重启后编号可能变，需重跑本脚本"
+}
+
 & powershell -NoProfile -ExecutionPolicy Bypass -File $Sibling -Profile vdd -OutputName $target
 $ExitCode = $LASTEXITCODE
 
@@ -586,7 +671,8 @@ $ExitCode = $LASTEXITCODE
 Write-Host ''
 Write-Host '==== 完成 ===='
 if ($ExitCode -eq 0) {
-    Write-Host "Sunshine 已切换为捕获 $target，连上时会禁用其余显示屏（物理屏无信号自动待机）。"
+    Write-Host 'Sunshine 已切换为捕获虚拟屏：连上时只保留它，断开回滚物理屏。'
+    Write-Host "捕获目标  $target"
     Write-Host ''
     Write-Host '手机端必须做的一件事：'
     Write-Host '  Moonlight → 设置 → 打开「优化游戏设置」'

@@ -13,21 +13,30 @@
 ### how-to
 
 - [局域网串流上线前要过的六道检查](./docs/部署清单.md) — 从版本、开关、自启到快照的可执行清单，每步都带验证方法。
+- [用 6 张分辨率卡片代替在客户端反复改设置](./docs/安装Moonlight卡片.md) — apps.json 加多张名字带分辨率的 Desktop 卡；Moonlight 按卡独立保存分辨率，点卡即用对应档位。
 - [出包只有两步：先拉资产，再打 zip](./docs/出包流程.md) — 构建阶段把 Sunshine、Moonlight、虚拟屏驱动和许可证全部拉齐并按哈希校验，打成一个自包含 zip；用户解压双击即可安装，全程不需要联网。
 
 ### reference
 
 - [文档索引](./docs/index.md) — sunshine-lan-streaming 的人工导航；生成索引见 _generated/index.md。
+- [本机跑通不等于换机可复现：两台实测设备的差异](./docs/设备矩阵.md) — 已记录两台硬件完全不同的宿主；对照表说明哪些结论是跨机通用、哪些只属于某一台。
+- [多设备部署前先固定设备 ID 与硬件画像](./docs/设备硬件标准.md) — 同一份配置不能跨机照抄；先给每台机器一个稳定 ID 和一份硬件档案，再谈 36 项基线。
 - [36 项对得上，才叫装好了](./docs/配置清单.md) — 单机局域网串流的配置基线：10 组 36 项，每项给出期望值、取法、合格线与偏离处置。
 - [官方只有一个版本适合长期停留：2026.516](./docs/版本矩阵.md) — 官方稳定版的时间线、各自已知问题，以及"停在哪个版本"的判断依据。
 
 ### explanation
 
 - [局域网串流优先留在官方分支，只有需要虚拟显示器才换分支](./docs/分支选型.md) — 五类 Sunshine 分支的维护状态与适用边界；按"客户端要不要非标准分辨率"分流，而不是按"哪个更稳"。
+- [卡片选分辨率靠 dd_resolution_option=auto，静态表是它的候选集](./docs/Moonlight卡片分辨率.md) — Moonlight 每张应用卡片都有分辨率选项；Sunshine 按客户端请求切虚拟屏模式，前提是把模式声明在 vdd-resolutions.txt 里。
+- [按需虚拟屏用 Sunshine 原生 ensure_only_display，prep 方案已实测否决](./docs/按需虚拟屏选型.md) — 驱动仍用 MTT VDD 不换栈；但切屏必须交给 Sunshine 的 ensure_only_display，prep-cmd 因时序与回滚冲突会卡死连接。
 - [虚拟屏要"先切屏再连接"，且切换权不能交给 Sunshine](./docs/虚拟显示器方案.md) — 三条虚拟屏路线的取舍，以及为什么把切换发起权移到 Sunshine 外部是稳定性的关键。
 
 ## Reports
 
+- [780M 核显单屏机：Sunshine 未装，八项偏离全来自既有环境](./docs/reports/2026-11-24-redmibookpro15x-本机基线.md) — 2026-11-24 第二台设备的装机前基线：AMD Radeon 780M、3200x2000 单屏、7 项合格 / 8 项偏离 / 21 项待测。
+- [780M 核显机装上了 Sunshine：15 项合格，但还没接客户端](./docs/reports/2026-11-24-redmibookpro15x-安装验证.md) — 2026-11-24 第二台设备安装 2026.516.143833 的验证记录：服务、端口、配置、按设备状态目录全部成立；未做串流与局域网拓扑验证。
+- [按需虚拟屏第一次尝试失败：prep 切屏卡死连接，改用原生 ensure_only_display](./docs/reports/2026-11-24-redmibookpro15x-按需虚拟屏.md) — 2026-11-24 在 redmibookpro15x 上用 global_prep_cmd 切虚拟屏，连接卡在编码器探测；改回 Sunshine 原生 ensure_only_display，待真机复测。
+- [780M 单屏机装上了虚拟屏：需要手动 extend 一次](./docs/reports/2026-11-24-redmibookpro15x-虚拟屏安装.md) — 2026-11-24 第二台设备装 MTT VDD 的记录：驱动节点 OK 但 DXGI 不枚举，DisplaySwitch /extend 后出现 DISPLAY36；配置已切 vdd 基线并保留中文。
 - [真机通了，但不是走局域网通的](./docs/reports/2026-11-24-安卓真机验证.md) — 2026-11-24 手机端首次真机串流记录：axixi 分支客户端 + 官方 Sunshine 跑通 HEVC/1440p/60fps，但链路是宿主自带热点而非业务网段；同时暴露基线配置键二次丢失与 HAGS 开启两个问题。
 - [本机基线：4 项合格、7 项不合格、25 项待测](./docs/reports/2026-11-24-本机基线.md) — 2026-11-24 对 36 项配置基线的首次实测，记录环境全貌、七处偏离，以及单屏退路这个未解难题。
 - [L1 通过：三项配置生效，一条判据被证伪](./docs/reports/2026-11-24-安装验证.md) — 2026-11-24 首次安装 2026.516 的验证记录：服务/端口/配置实测，C-01 判据修正依据，以及 0.0.0.0 绑定带出的暴露面问题。
@@ -36,4 +45,6 @@
 
 - [用 API 改一个键，会把其余键一起清空](./docs/配置写入覆盖.md) — Sunshine 的 POST /api/config 是整体替换而非增量合并，只提交部分键会静默抹掉未提交的键，upnp 会因此回落到默认的 enabled。
 - [用 ensure_only_display 会让断开串流时卡死两分钟](./docs/显示拓扑卡死.md) — Sunshine 自己切换显示拓扑失败后会进入阻塞重试，把会话拆除流程堵死；规避方式是让它不参与拓扑管理。
+- [虚拟屏没被调用有两个坑：prep 时序，和绑了 DISPLAY 编号](./docs/prep命令改不了捕获屏.md) — prep 在编码器探测之后才跑会让连接失败；把 output_name 写成 DISPLAYn 则在编号变化后静默回退物理屏、分辨率不变。
+- [单屏机器装完 VDD，DXGI 里没有虚拟屏](./docs/单屏装虚拟屏不枚举.md) — AMD 780M 单屏笔记本上驱动节点已 OK、DXGI 却只有物理屏；DisplaySwitch /extend 一次即可枚举出虚拟屏。
 - [改了 vdd_settings.xml 却不生效，虚拟屏永远停在 800x600](./docs/虚拟屏配置不生效.md) — 配置文件写得完全正确、驱动也读到了，但只要文件带 UTF-8 BOM，XmlLite 就解析失败，虚拟屏回退到 EDID 硬编码的 800x600，而改文件、禁用/启用设备、重装驱动全都看不出任何异常。

@@ -56,6 +56,8 @@ if (-not (Test-Path -LiteralPath $Manifest)) {
 $m = Get-Content -LiteralPath $Manifest -Raw -Encoding UTF8 | ConvertFrom-Json
 $version = [string]$m.package.version
 if (-not $version) { Fail 'manifest 缺少 package.version'; exit 1 }
+# 说明文件与自检清单从 manifest 派生，避免"构建脚本不得硬编码版本"被自己违反
+$moonAsset = [string]$m.components.moonlight.asset
 Info "版本: $version"
 
 if (-not $SkipFetch) {
@@ -170,28 +172,40 @@ Sunshine 局域网串流 · 离线安装包 v$version
 
 一、安装宿主（需要管理员）
     双击  安装.cmd
-    按提示操作。它会安装 Sunshine、写入局域网串流基线配置并启动服务。
+    装完即可用：Web UI 已是中文（locale=zh），局域网安全基线、
+    显示与编码开关全部写入，服务自启并就绪，不需要进设置页手选。
 
-二、启用虚拟显示器（推荐）
+二、启用虚拟显示器
     双击  安装虚拟屏.cmd
-    装完后，手机连上时会自动启用虚拟屏、两块物理屏息屏；
-    断开后自动恢复，不需要手动切换显示器。
+    装完会把 Sunshine 切到虚拟屏捕获；单屏笔记本若 DXGI 暂时看不到
+    新屏，脚本会自动执行一次 DisplaySwitch /extend 让它出现。
+    连上时只保留虚拟屏（物理屏息屏），断开自动回滚物理屏。
 
-    前提：Moonlight 客户端里要打开「优化游戏设置」，
-    否则分辨率不会跟随客户端变化，画面会停在 800x600。
+    前提：Moonlight 客户端打开「优化游戏设置」，否则客户端请求的
+    分辨率不会切换，画面会停在预设的第一档。
 
-三、客户端
-    vendor\MoonlightPortable-x64-6.2.0.zip  解压即用（Windows 端）。
+    分辨率是静态预设（conf\vdd-resolutions.txt），客户端请求表外档位
+    会静默失败。新设备请先确认它的分辨率在表里。
+
+三、分辨率卡片（可选，推荐）
+    双击  安装分辨率卡片.cmd
+    会多出 6 张「桌面 · 1080p / 2K / 4K / 720p / 手机 / 平板」卡。
+    Moonlight 按卡分别记住分辨率：在每张卡的设置里选好对应档位、
+    打开「优化游戏设置」，之后点卡即用该分辨率，不用每次改设置。
+    前提：档位必须在 conf\vdd-resolutions.txt 里，表外会静默失败。
+
+四、客户端
+    vendor\$moonAsset  解压即用（Windows 端）。
     手机 / 平板 / 电视请自行在各自应用商店安装 Moonlight。
     已知可用：Moonlight for Android（含 axixi 第三方构建）。
 
-四、出问题时
+五、出问题时
     物理屏黑掉不恢复   → 双击  恢复显示.cmd
     想退回物理屏方案   → 双击  恢复基线.cmd
     只是想看当前状态   → powershell -ExecutionPolicy Bypass -File scripts\Get-Baseline.ps1
     驱动日志           → C:\VirtualDisplayDriver\Logs\
 
-五、目录说明
+六、目录说明
     scripts\    全部 PowerShell 脚本
     conf\       虚拟屏分辨率预设（按设备名列出）
     licenses\   第三方许可证全文
@@ -237,15 +251,17 @@ try {
     $must = @(
         '安装.cmd',
         '安装虚拟屏.cmd',
+        '安装分辨率卡片.cmd',
         '使用说明.txt',
         'manifest\components.json',
         'scripts\Install.ps1',
         'scripts\Install-Vdd.ps1',
+        'scripts\Install-Cards.ps1',
         'scripts\_Baseline.ps1',
         'conf\vdd-resolutions.txt',
-        'licenses\GPL-3.0.txt',
-        'licenses\MIT.txt'
+        'conf\devices\defaults.json'
     )
+    foreach ($lic in $licenseNeeded) { $must += ('licenses\' + $lic + '.txt') }
     foreach ($n in @($m.components.PSObject.Properties.Name)) {
         $must += ('vendor\' + $m.components.$n.asset)
     }
