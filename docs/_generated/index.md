@@ -1,0 +1,56 @@
+---
+id: docs.generated.index
+title: 生成索引
+summary: 从 frontmatter 自动生成的导航；勿手改。
+type: reference
+kind: index
+status: active
+owner: "@platform"
+source_type: doc
+source: schema/taxonomy.json
+last_reviewed: 2026-11-11
+related: []
+---
+
+# 生成索引
+
+> 生成文件，勿手改。运行 `python tools/repo-kit/generate.py --root . --write` 重建。
+
+## 按 type
+
+### how-to
+
+| 页面 | kind | status | owner | tier | source |
+|---|---|---|---|---|---|
+| [局域网串流上线前要过的六道检查](../部署清单.md) | standard | active | @simiely | critical | `AGENTS.md` |
+
+### reference
+
+| 页面 | kind | status | owner | tier | source |
+|---|---|---|---|---|---|
+| [文档索引](../index.md) | index | active | @simiely | normal | `README.md` |
+| [官方只有一个版本适合长期停留：2026.516](../版本矩阵.md) | note | active | @simiely | critical | `https://github.com/LizardByte/Sunshine/releases` |
+
+### explanation
+
+| 页面 | kind | status | owner | tier | source |
+|---|---|---|---|---|---|
+| [局域网串流优先留在官方分支，只有需要虚拟显示器才换分支](../分支选型.md) | decision | active | @simiely | critical | `https://github.com/LizardByte/Sunshine/releases` |
+| [虚拟屏要"先切屏再连接"，且切换权不能交给 Sunshine](../虚拟显示器方案.md) | standard | active | @simiely | critical | `https://github.com/VirtualDrivers/Virtual-Display-Driver` |
+
+## Pitfalls
+
+| 坑 | severity | 症状 | applies_to | status |
+|---|---|---|---|---|
+| [用 ensure_only_display 会让断开串流时卡死两分钟](../显示拓扑卡死.md) | high | 退出串流后主机冻结约两分钟，Sunshine 不再接受新连接，随后服务自行重启；期间鼠标键盘可能无响应，显示器分辨率停在串流时的值。 | `streaming.version-matrix`, `streaming.virtual-display` | active |
+
+## 全部页面
+
+| id | 标题 | type | kind | status |
+|---|---|---|---|---|
+| `docs.index` | [文档索引](../index.md) | reference | index | active |
+| `streaming.branch-selection` | [局域网串流优先留在官方分支，只有需要虚拟显示器才换分支](../分支选型.md) | explanation | decision | active |
+| `streaming.deploy-checklist` | [局域网串流上线前要过的六道检查](../部署清单.md) | how-to | standard | active |
+| `streaming.display-topology-freeze` | [用 ensure_only_display 会让断开串流时卡死两分钟](../显示拓扑卡死.md) | explanation | pitfall | active |
+| `streaming.version-matrix` | [官方只有一个版本适合长期停留：2026.516](../版本矩阵.md) | reference | note | active |
+| `streaming.virtual-display` | [虚拟屏要"先切屏再连接"，且切换权不能交给 Sunshine](../虚拟显示器方案.md) | explanation | standard | active |

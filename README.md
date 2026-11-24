@@ -1,0 +1,35 @@
+# sunshine-lan-streaming
+
+Sunshine + Moonlight 局域网串流的选型、部署与排障笔记。
+
+面向的场景很窄：**一台 Windows 主机、只在内网用、客户端是 Moonlight、希望长期不用管**。广域网串流、云主机、Docker 方案不在范围内。
+
+## 三条结论
+
+1. **不需要虚拟显示器就别换分支**。官方 2026.516 组件最少，是长期停留的最优解。见 [版本矩阵](docs/版本矩阵.md)。
+2. **需要虚拟显示屏时，切换权要放在 Sunshine 外面**。它内置的 `ensure_only_display` 会在回滚失败后阻塞重试，卡死约两分钟。见 [显示拓扑卡死](docs/显示拓扑卡死.md)。
+3. **"不需要维护"的正确实现是能回滚**，不是不出问题。上线前存好配置、显示配置与版本清单。见 [部署清单](docs/部署清单.md)。
+
+## 文档
+
+- [docs/index.md](docs/index.md) — 全部页面的导航入口
+- [AGENTS.md](AGENTS.md) — AI / 维护者入口：约定、命令、当前规模（生成物）
+- [DEVELOPMENT.md](DEVELOPMENT.md) — 仓库结构与关键问题
+- [CHANGELOG.md](CHANGELOG.md) — 版本历史
+
+## 快速开始
+
+```bash
+python -m pip install -r requirements.txt
+python tools/repo-kit/check_repo.py --root .
+python tools/repo-kit/generate.py --root . --check
+powershell -File tools/update-repo-kit.ps1 -Check
+```
+
+四项全绿才算仓库健康：`REPO CHECK` / `GENERATE CHECK` / `KIT LOCK` / CI。
+
+## 边界
+
+- 本仓库只记录**可复现的步骤与有依据的判断**，不收录一次性流水账。
+- 版本号与 issue 编号都标了取数日期（2026-11-24），过期的判断请连同 `last_reviewed` 一起更新。
+- 机器层只保结构、链接、真源与新鲜度；内容对不对靠人审。
