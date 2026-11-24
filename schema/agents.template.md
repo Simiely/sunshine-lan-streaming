@@ -1,6 +1,6 @@
 # AGENTS.md · sunshine-lan-streaming 项目规则
 
-> 📌 **文档基线**：2026-11-24（`4ad517f`）—— 从 knowledge-base 新项目模板创建（knowledge profile）
+> 📌 **文档基线**：2026-11-24（`ac0184b`）—— 增加配置基线与发行骨架（v0.2.0，knowledge profile）
 > **更新文档后请更新此行**（日期 + 新 commit hash），并在 CHANGELOG 追加版本
 
 本仓库是 sunshine-lan-streaming 的知识库。回答相关问题前先读这份，再读 [docs/index.md](docs/index.md)。
