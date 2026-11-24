@@ -585,6 +585,17 @@ if (-not $target) {
 }
 
 if (-not $target) {
+    # 已用 device_id 绑定时，DISPLAYn 识别只是可选步骤——output_name 写 GUID
+    # 就不依赖编号，设备存在即可直接应用配置（GUID 会在第 6 步重新解析）。
+    $curMap = Read-ConfMap -Path $Conf
+    $curOut = if ($curMap.Contains('output_name')) { [string]$curMap['output_name'] } else { '' }
+    if ($curOut -match '^\{[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\}$') {
+        Write-Host "识别      跳过 DISPLAYn（output_name 已绑定 device_id $curOut）"
+        $target = $curOut
+    }
+}
+
+if (-not $target) {
     $newOnes = @($outputs | Where-Object { $_.Output -notin $beforeOut })
     Write-Host ''
     Write-Host 'FAIL 无法唯一确定虚拟屏对应的 \\.\DISPLAYn，已中止，sunshine.conf 未做任何改动。'

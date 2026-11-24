@@ -26,21 +26,34 @@ FONT_CN = r"C:\Windows\Fonts\msyh.ttc"
 
 OUT = Path(__file__).resolve().parents[2] / "payload" / "covers"
 
+# 顺序即 Moonlight 里的展示顺序：iOS → 安卓 → Switch → 电视 → 通用。
+# OPPO 实测可用的串流档位是 2354x1080（不是其屏幕原生 2772x1272）。
 CARDS = [
-    ("Find X9 Pro", 2772, 1272, 60, "#2DD4BF"),
     ("iPhone 17 Pro Max", 2868, 1320, 60, "#60A5FA"),
     ("iPad Pro 12.9", 2732, 2048, 120, "#A78BFA"),
+    ("Find X9 Pro", 2354, 1080, 120, "#2DD4BF"),
     ("Switch 底座", 1920, 1080, 60, "#F87171"),
     ("电视 4K", 3840, 2160, 60, "#FBBF24"),
-    ("通用", 1280, 720, 60, "#94A3B8"),
     ("通用", 2560, 1440, 60, "#34D399"),
-    ("通用", 1440, 900, 60, "#F472B6"),
 ]
+
+
+MARGIN = 44
 
 
 def centered(draw, text, font, y, fill):
     left, top, right, bottom = draw.textbbox((0, 0), text, font=font)
     draw.text(((W - (right - left)) / 2 - left, y - top), text, font=font, fill=fill)
+
+
+def fit(draw, text, path, size, max_w, min_size=24):
+    while size > min_size:
+        font = ImageFont.truetype(path, size)
+        left, _, right, _ = draw.textbbox((0, 0), text, font=font)
+        if right - left <= max_w:
+            return font
+        size -= 2
+    return ImageFont.truetype(path, min_size)
 
 
 def make(device, width, height, fps, accent):
@@ -49,31 +62,16 @@ def make(device, width, height, fps, accent):
 
     draw.rectangle([0, 0, W, 10], fill=accent)
 
-    max_w, max_h = 440, 290
-    ratio = width / height
-    sw = max_w
-    sh = int(sw / ratio)
-    if sh > max_h:
-        sh = max_h
-        sw = int(sh * ratio)
-    x0 = (W - sw) // 2
-    y0 = 300 - sh // 2
-    draw.rounded_rectangle([x0, y0, x0 + sw, y0 + sh], radius=12, outline=accent, width=4)
-    draw.rounded_rectangle([x0 + 10, y0 + 10, x0 + sw - 10, y0 + sh - 10], radius=8, fill=PANEL)
+    f_dev = fit(draw, device, FONT_CN, 52, W - MARGIN * 2)
+    f_res = fit(draw, f"{width}×{height}", FONT_RES, 96, W - MARGIN * 2)
+    f_fps = ImageFont.truetype(FONT_RES, 54)
 
-    f_res = ImageFont.truetype(FONT_RES, 68)
-    f_dev = ImageFont.truetype(FONT_CN, 30)
-    f_fps = ImageFont.truetype(FONT_RES, 26)
+    centered(draw, device, f_dev, 200, MUTED)
+    centered(draw, f"{width}×{height}", f_res, 400, TEXT)
 
-    centered(draw, f"{width}×{height}", f_res, 500, TEXT)
-    centered(draw, device, f_dev, 610, MUTED)
-
-    badge = f"{fps} Hz"
-    left, top, right, bottom = draw.textbbox((0, 0), badge, font=f_fps)
-    bw, bh = right - left, bottom - top
-    bx, by = (W - bw) / 2, 686
-    draw.rounded_rectangle([bx - 18, by - 8, bx + bw + 18, by + bh + 8], radius=16, fill=PANEL)
-    draw.text((bx - left, by - top), badge, font=f_fps, fill=accent)
+    label = f"{fps} Hz"
+    left, top, right, bottom = draw.textbbox((0, 0), label, font=f_fps)
+    draw.text(((W - (right - left)) / 2 - left, 560 - top), label, font=f_fps, fill=accent)
 
     OUT.mkdir(parents=True, exist_ok=True)
     path = OUT / f"res-{width}x{height}.png"

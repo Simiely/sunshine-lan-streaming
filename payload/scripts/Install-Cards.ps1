@@ -48,15 +48,15 @@ if (-not (Test-Path -LiteralPath $AppsFile)) {
 # 误读成"分辨率已固定"的写法。
 # 封面图由 tools/build/Gen-Covers.py 生成，部署到 Sunshine 的 assets\covers\。
 # image-path 用相对 assets 的路径，跨机器有效（不能写绝对路径）。
+# 顺序即 Moonlight 里的展示顺序：iOS → 安卓 → Switch → 电视 → 通用。
+# OPPO 实测可用档位是 2354x1080，不是屏幕原生 2772x1272。
 $cards = @(
-    [pscustomobject]@{ Name = 'Find X9 Pro 2772x1272@60'; Image = 'covers/res-2772x1272.png'; Note = 'OPPO 手机宽屏原生' }
-    [pscustomobject]@{ Name = 'iPhone 17 Pro Max 2868x1320@60'; Image = 'covers/res-2868x1320.png'; Note = 'iPhone 宽屏原生' }
-    [pscustomobject]@{ Name = 'iPad Pro 12.9 2732x2048@120'; Image = 'covers/res-2732x2048.png'; Note = 'iPad 平板 4:3' }
-    [pscustomobject]@{ Name = 'Switch 底座 1920x1080@60'; Image = 'covers/res-1920x1080.png'; Note = 'Switch / 电视 1080p' }
-    [pscustomobject]@{ Name = '电视 4K 3840x2160@60'; Image = 'covers/res-3840x2160.png'; Note = '4K 大屏' }
-    [pscustomobject]@{ Name = '通用 1280x720@60'; Image = 'covers/res-1280x720.png'; Note = '低带宽 / 远距离' }
-    [pscustomobject]@{ Name = '通用 2560x1440@60'; Image = 'covers/res-2560x1440.png'; Note = '2K 桌面' }
-    [pscustomobject]@{ Name = '通用 1440x900@60'; Image = 'covers/res-1440x900.png'; Note = '16:10 笔记本' }
+    [pscustomobject]@{ Name = 'iPhone 17 Pro Max 2868x1320@60'; Image = 'covers/res-2868x1320.png'; Note = 'iOS 手机' }
+    [pscustomobject]@{ Name = 'iPad Pro 12.9 2732x2048@120'; Image = 'covers/res-2732x2048.png'; Note = 'iOS 平板 4:3' }
+    [pscustomobject]@{ Name = 'Find X9 Pro 2354x1080@120'; Image = 'covers/res-2354x1080.png'; Note = '安卓手机 120Hz' }
+    [pscustomobject]@{ Name = 'Switch 底座 1920x1080@60'; Image = 'covers/res-1920x1080.png'; Note = 'Switch 主机' }
+    [pscustomobject]@{ Name = '电视 4K 3840x2160@60'; Image = 'covers/res-3840x2160.png'; Note = '电视 4K' }
+    [pscustomobject]@{ Name = '通用 2560x1440@60'; Image = 'covers/res-2560x1440.png'; Note = '通用 2K' }
 )
 
 # ---------- 部署封面 ----------
@@ -72,6 +72,16 @@ if (Test-Path -LiteralPath $coverSrc) {
         $copied++
     }
     Write-Host "部署封面  $copied 张 → $coverDst"
+
+    # 删掉目标目录里已不在包内的旧封面，避免改分辨率后残留
+    $keep = @{}
+    Get-ChildItem -LiteralPath $coverSrc -Filter '*.png' -File | ForEach-Object { $keep[$_.Name] = $true }
+    Get-ChildItem -LiteralPath $coverDst -Filter 'res-*.png' -File -ErrorAction SilentlyContinue | ForEach-Object {
+        if (-not $keep.ContainsKey($_.Name)) {
+            Remove-Item -LiteralPath $_.FullName -Force
+            Write-Host "移除旧封面  $($_.Name)"
+        }
+    }
 } else {
     Write-Host 'WARN 包内没有 covers\ 目录，卡片只能用默认图'
 }
@@ -80,16 +90,22 @@ try { $json = Get-Content -LiteralPath $AppsFile -Raw -Encoding UTF8 | ConvertFr
 catch { Write-Host "FAIL 解析 apps.json 失败：$($_.Exception.Message)"; exit 2 }
 
 $apps = @($json.apps)
-$existing = @{}
-foreach ($a in $apps) { $existing[[string]$a.name] = $a }
 
-# 清理 v0.5.4 的旧命名（「桌面 · xxx」）。那一版名字里没有设备名和刷新率，
-# 认不出对应哪台客户端；保留会和新卡重复。
-$legacy = @($apps | Where-Object { [string]$_.name -like '桌面 · *' })
+# 托管卡判定：封面指向 covers\res-*（本脚本生成的），外加 v0.5.4 的旧命名。
+# 先全部移除、再按 CARDS 顺序重建——这样删卡、改名、调顺序一次生效，
+# 且不会碰 Desktop / Steam。
+function Test-ManagedCard($card) {
+    $img = [string]$card.'image-path'
+    return (([string]$card.name -like '桌面 · *') -or ($img -like 'covers/res-*') -or ($img -like 'covers\res-*'))
+}
+$legacy = @($apps | Where-Object { Test-ManagedCard $_ })
 if ($legacy.Count -gt 0) {
-    $apps = @($apps | Where-Object { [string]$_.name -notlike '桌面 · *' })
+    $apps = @($apps | Where-Object { -not (Test-ManagedCard $_) })
     foreach ($l in $legacy) { Write-Host "移除旧卡  $($l.name)" }
 }
+
+$existing = @{}
+foreach ($a in $apps) { $existing[[string]$a.name] = $a }
 
 $added = 0
 $skipped = 0
