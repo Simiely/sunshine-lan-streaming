@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "package": {
+    "name": "sunshine-lan-streaming",
+    "version": "0.1.0",
+    "target": "windows-amd64",
+    "min_os": "10.0.19041",
+    "scope": "单台 Windows 宿主、仅局域网、Moonlight 客户端"
+  },
+  "components": {
+    "sunshine": {
+      "role": "host",
+      "version": "2026.516.143833",
+      "channel": "stable",
+      "asset": "Sunshine-Windows-AMD64-installer.msi",
+      "url": "https://github.com/LizardByte/Sunshine/releases/download/v2026.516.143833/Sunshine-Windows-AMD64-installer.msi",
+      "sha256": "e7208b11a4ab9dd89871133a054bbb8dc55dfbba408227b0eccab22c60b273a2",
+      "license": "GPL-3.0",
+      "source_url": "https://github.com/LizardByte/Sunshine/tree/v2026.516.143833",
+      "license_url": "https://github.com/LizardByte/Sunshine/blob/v2026.516.143833/LICENSE",
+      "verified_at": "2026-11-24",
+      "why": "最后一个老架构稳定版，组件最少；同版本同时提供 msi/exe/portable.zip，msi 可静默安装"
+    },
+    "moonlight": {
+      "role": "client-portable",
+      "version": "6.2.0",
+      "channel": "stable",
+      "asset": "MoonlightPortable-x64-6.2.0.zip",
+      "url": "https://github.com/moonlight-stream/moonlight-qt/releases/download/v6.2.0/MoonlightPortable-x64-6.2.0.zip",
+      "sha256": "6f91d268b41ed5ca8066d9d7578dc403b8db190991ff48f00b1700465f8f7ebf",
+      "license": "GPL-3.0",
+      "source_url": "https://github.com/moonlight-stream/moonlight-qt/tree/v6.2.0",
+      "license_url": "https://github.com/moonlight-stream/moonlight-qt/blob/v6.2.0/LICENSE",
+      "verified_at": "2026-11-24",
+      "why": "6.2.0 修复 CVE-2026-33546/33547/41210；便携版带 portable.dat，配置与日志写在本目录"
+    }
+  },
+  "deferred": {
+    "vigembus": {
+      "reason": "仅虚拟手柄需要，非首版必需",
+      "trap": "6.2.0 起 Moonlight 便携版若从 6.1.x 同目录升级，须先删 tls/qopensslbackend.dll，否则启动崩溃"
+    },
+    "vdd": {
+      "reason": "本机已存在两个第三方虚拟显示适配器，再加第三个会让 output_name 选择失真",
+      "unblock": "手机端 T1/T3 测试证明黑边不可接受后再评估"
+    }
+  },
+  "notes": {
+    "single_source_of_truth": "版本、URL、哈希只写在本文件；构建脚本不得硬编码",
+    "hash_policy": "sha256 来自上游 Release 资产页，构建时用 Get-FileHash 复核，不一致即中止",
+    "redistribution": "GPL-3.0 再分发须随包附完整许可证文本与对应 tag 的源码地址"
+  }
+}

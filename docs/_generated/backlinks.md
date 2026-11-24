@@ -20,6 +20,8 @@ related: []
 | 目标 id / 技能 | 来源 id | 关系 | 来源页面 |
 |---|---|---|---|
 | `streaming.branch-selection` | [官方只有一个版本适合长期停留：2026.516](../版本矩阵.md) | see-also | `docs/版本矩阵.md` |
+| `streaming.config-inventory` | [本机基线：4 项合格、7 项不合格、25 项待测](../reports/2026-11-24-本机基线.md) | spawned-from（反向：spawned） | `docs/reports/2026-11-24-本机基线.md` |
+| `streaming.config-inventory` | [局域网串流上线前要过的六道检查](../部署清单.md) | see-also | `docs/部署清单.md` |
 | `streaming.display-topology-freeze` | [局域网串流优先留在官方分支，只有需要虚拟显示器才换分支](../分支选型.md) | see-also | `docs/分支选型.md` |
 | `streaming.display-topology-freeze` | [官方只有一个版本适合长期停留：2026.516](../版本矩阵.md) | depends-on（反向：depended-on-by） | `docs/版本矩阵.md` |
 | `streaming.display-topology-freeze` | [虚拟屏要"先切屏再连接"，且切换权不能交给 Sunshine](../虚拟显示器方案.md) | depends-on（反向：depended-on-by） | `docs/虚拟显示器方案.md` |
