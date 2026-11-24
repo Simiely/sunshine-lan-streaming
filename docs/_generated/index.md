@@ -43,6 +43,7 @@ related: []
 
 | 页面 | status | owner | tier | source |
 |---|---|---|---|---|
+| [真机通了，但不是走局域网通的](../reports/2026-11-24-安卓真机验证.md) | active | @simiely | normal | `docs/配置清单.md` |
 | [本机基线：4 项合格、7 项不合格、25 项待测](../reports/2026-11-24-本机基线.md) | archived | @simiely | normal | `docs/配置清单.md` |
 | [L1 通过：三项配置生效，一条判据被证伪](../reports/2026-11-24-安装验证.md) | archived | @simiely | normal | `docs/配置清单.md` |
 
@@ -50,6 +51,7 @@ related: []
 
 | 坑 | severity | 症状 | applies_to | status |
 |---|---|---|---|---|
+| [用 API 改一个键，会把其余键一起清空](../配置写入覆盖.md) | high | sunshine.conf 突然只剩两三行，先前写入的基线键消失；体检测试的合格数无故下降（本机从 14 掉到 12），upnp 与 origin_web_ui_allowed 同时回落到默认值。 | `streaming.config-inventory`, `streaming.deploy-checklist` | active |
 | [用 ensure_only_display 会让断开串流时卡死两分钟](../显示拓扑卡死.md) | high | 退出串流后主机冻结约两分钟，Sunshine 不再接受新连接，随后服务自行重启；期间鼠标键盘可能无响应，显示器分辨率停在串流时的值。 | `streaming.version-matrix`, `streaming.virtual-display` | active |
 
 ## 全部页面
@@ -57,8 +59,10 @@ related: []
 | id | 标题 | type | kind | status |
 |---|---|---|---|---|
 | `docs.index` | [文档索引](../index.md) | reference | index | active |
+| `streaming.android-verify-20261124` | [真机通了，但不是走局域网通的](../reports/2026-11-24-安卓真机验证.md) | reference | report | active |
 | `streaming.baseline-20261124` | [本机基线：4 项合格、7 项不合格、25 项待测](../reports/2026-11-24-本机基线.md) | reference | report | archived |
 | `streaming.branch-selection` | [局域网串流优先留在官方分支，只有需要虚拟显示器才换分支](../分支选型.md) | explanation | decision | active |
+| `streaming.config-clobber` | [用 API 改一个键，会把其余键一起清空](../配置写入覆盖.md) | explanation | pitfall | active |
 | `streaming.config-inventory` | [36 项对得上，才叫装好了](../配置清单.md) | reference | standard | active |
 | `streaming.deploy-checklist` | [局域网串流上线前要过的六道检查](../部署清单.md) | how-to | standard | active |
 | `streaming.display-topology-freeze` | [用 ensure_only_display 会让断开串流时卡死两分钟](../显示拓扑卡死.md) | explanation | pitfall | active |

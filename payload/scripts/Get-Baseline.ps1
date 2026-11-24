@@ -180,19 +180,62 @@ $hdr = Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\GraphicsDrivers'
 if ($hdr) { Add-Row 'E-04' 'HDR' "$($hdr.EnableHDR)" '❓' '需在显示设置中确认实际状态' }
 else { Add-Row 'E-04' 'HDR' '未显式设置' '❓' '需在显示设置中确认' }
 
+# 最近一次串流会话的日志证据。E-05 与 F 组都能从这里判定，不必依赖 Web UI。
+# 日志按固定宽度折行，先整段读入再去掉换行，避免正则被折断。
+$LogPath  = Join-Path $env:ProgramFiles 'Sunshine\config\sunshine.log'
+$LogRaw   = ''
+if (Test-Path $LogPath) {
+    $LogRaw = Get-Content $LogPath -Raw -Encoding UTF8 -ErrorAction SilentlyContinue
+}
+$SessionFlat = ''
+if ($LogRaw) {
+    $idx = $LogRaw.LastIndexOf('New streaming session started')
+    if ($idx -ge 0) { $SessionFlat = ($LogRaw.Substring($idx) -replace "`r?`n", '') }
+}
+
+function Get-LogMatch {
+    param([string]$Text, [string]$Pattern)
+    if ([string]::IsNullOrEmpty($Text)) { return $null }
+    $ms = [regex]::Matches($Text, $Pattern)
+    if ($ms.Count -eq 0) { return $null }
+    return $ms[$ms.Count - 1].Groups[1].Value
+}
+
 $hags = Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\GraphicsDrivers' -Name HwSchMode -ErrorAction SilentlyContinue
+$hagsOn = $LogRaw -match 'Active GPU has HAGS enabled'
 if ($hags) {
     $hs = $hags.HwSchMode
-    Add-Row 'E-05' 'HAGS' $(if ($hs -eq 1) { '1（关闭）' } else { "$hs（开启）" }) $(if ($hs -eq 1) { '✅' } else { '⚠️' })
+    Add-Row 'E-05' 'HAGS' $(if ($hs -eq 1) { '1（关闭）' } else { "$hs（开启）" }) $(if ($hs -eq 1) { '✅' } else { '⚠️' }) '注册表 HwSchMode'
+} elseif ($hagsOn) {
+    Add-Row 'E-05' 'HAGS' '开启（注册表未设，日志确认）' '⚠️' 'Win11 缺省即开启；与串流编码冲突'
 } else {
-    Add-Row 'E-05' 'HAGS' '未设置' '❓' 'Win11 可能默认开启，需实测'
+    Add-Row 'E-05' 'HAGS' '注册表未设且无串流记录' '❓' '完成一次串流后可自动判定'
 }
 
 # ---------- F 编码 ----------
-Add-Row 'F-01' '编码器' '需 Web UI 读取' '❓' 'Audio/Video 页确认 nvenc'
-Add-Row 'F-02' '码率' '需 Web UI 读取' '❓' ''
-Add-Row 'F-03' '帧率' '需 Web UI 读取' '❓' ''
-Add-Row 'F-04' '色彩' '需 Web UI 读取' '❓' ''
+$enc = Get-LogMatch -Text $SessionFlat -Pattern 'Creating encoder \[([a-z0-9_]+)\]'
+if ($enc) {
+    $note = if ($enc -match 'nvenc|amf|qsv|vaapi') { '硬件编码，取自最近一次串流日志' } else { '软件编码，延迟会明显偏高' }
+    Add-Row 'F-01' '编码器' $enc $(if ($enc -match 'nvenc|amf|qsv|vaapi') { '✅' } else { '⚠️' }) $note
+} else {
+    Add-Row 'F-01' '编码器' '无串流记录' '❓' '完成一次串流后自动判定'
+}
+
+Add-Row 'F-02' '码率' '日志不含' '❓' 'Moonlight 客户端侧设置，需在手机上确认'
+
+$fps = Get-LogMatch -Text $SessionFlat -Pattern 'Requested frame rate \[([^\]]+)\]'
+if ($fps) { Add-Row 'F-03' '帧率' $fps '✅' '客户端请求值' }
+else { Add-Row 'F-03' '帧率' '无串流记录' '❓' '' }
+
+$coding = Get-LogMatch -Text $SessionFlat -Pattern 'Color coding: (.+?)\['
+$depth  = Get-LogMatch -Text $SessionFlat -Pattern 'Color depth: (\d+-bit)'
+if ($coding) {
+    $c = $coding.Trim()
+    if ($depth) { $c = "$c / $depth" }
+    Add-Row 'F-04' '色彩' $c '✅' 'SDR 即未在链路上启用 HDR'
+} else {
+    Add-Row 'F-04' '色彩' '无串流记录' '❓' ''
+}
 
 # ---------- G 冲突软件 ----------
 $map = @{ 'G-01' = @('AweSunService', '向日葵'); 'G-02' = @('RayLinkService', 'RayLink'); 'G-03' = @('ToDesk_Service', 'ToDesk') }

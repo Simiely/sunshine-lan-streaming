@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## v0.3.0 — 2026-11-24
+
+### 新增
+
+- 修复脚本 `payload/scripts/Restore-Baseline.ps1` 与 `payload/恢复基线.cmd`：对 `sunshine.conf` 做「读全量 → 覆盖基线键 → 合并写回」，自动备份、回读校验、重启服务并轮询三个常驻端口。非管理员时提前退出并给出提权指引，不留半截状态。
+- 证据层 `docs/reports/2026-11-24-安卓真机验证.md`：手机真机首次串流记录。`moonlight-axixi` 构建 `261107` 配官方 Sunshine `2026.516`，HEVC / `2560x1440` / 60fps / Opus / 触屏 + 手柄全部正常。
+- 踩坑页 `docs/配置写入覆盖.md`：`POST /api/config` 是整体替换，单键写入会静默抹掉其余键并把 `upnp` 改回 `enabled`。
+
+### 变更
+
+- `Get-Baseline.ps1`：`E-05` HAGS 改为「注册表缺失时按 Win11 缺省视为开启」并与日志交叉验证；`F-01`/`F-03`/`F-04` 改为从最后一次串流会话的日志自动提取，不再依赖 Web UI。合格数 12 → 15。
+- `docs/配置清单.md`：更新 D/E/F/I 组状态与判据；补两条易错点——`Offset` 相对虚拟桌面而非绝对坐标、捕获面 `R16G16B16A16_FLOAT` 不等于传输色彩空间。
+- `DEVELOPMENT.md`：把"通过"的判据收紧为「真机 + 同广播域 + 无遗留 `⚠️`」；说明 `reports/` 的 `active` / `archived` 用法。
+- `manifest/components.json`：`package.version` 与 CHANGELOG 对齐。
+
+### 说明
+
+- 本版仍不含可安装产物。真机串流成立，但链路是宿主自带移动热点（`192.168.137.0/24`），与业务网段 `10.4.240.0/23` 不同，局域网拓扑尚未验证，按 `DEVELOPMENT.md` 的规则 zip 不可发布。
+
 ## v0.2.0 — 2026-11-24
 
 ### 新增
