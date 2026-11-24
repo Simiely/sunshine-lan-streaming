@@ -44,6 +44,7 @@ related: []
 | 页面 | status | owner | tier | source |
 |---|---|---|---|---|
 | [本机基线：4 项合格、7 项不合格、25 项待测](../reports/2026-11-24-本机基线.md) | archived | @simiely | normal | `docs/配置清单.md` |
+| [L1 通过：三项配置生效，一条判据被证伪](../reports/2026-11-24-安装验证.md) | archived | @simiely | normal | `docs/配置清单.md` |
 
 ## Pitfalls
 
@@ -61,5 +62,6 @@ related: []
 | `streaming.config-inventory` | [36 项对得上，才叫装好了](../配置清单.md) | reference | standard | active |
 | `streaming.deploy-checklist` | [局域网串流上线前要过的六道检查](../部署清单.md) | how-to | standard | active |
 | `streaming.display-topology-freeze` | [用 ensure_only_display 会让断开串流时卡死两分钟](../显示拓扑卡死.md) | explanation | pitfall | active |
+| `streaming.install-verify-20261124` | [L1 通过：三项配置生效，一条判据被证伪](../reports/2026-11-24-安装验证.md) | reference | report | archived |
 | `streaming.version-matrix` | [官方只有一个版本适合长期停留：2026.516](../版本矩阵.md) | reference | note | active |
 | `streaming.virtual-display` | [虚拟屏要"先切屏再连接"，且切换权不能交给 Sunshine](../虚拟显示器方案.md) | explanation | standard | active |

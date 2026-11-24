@@ -35,8 +35,8 @@ python -m pip install -r requirements.txt   # 文档检查依赖
 
 ## 当前规模
 
-- 页面：8（critical=6）
-- 按 type：explanation=3, how-to=1, reference=4
+- 页面：9（critical=6）
+- 按 type：explanation=3, how-to=1, reference=5
 - 词表版本：2.9.1
 
 ## 边界
