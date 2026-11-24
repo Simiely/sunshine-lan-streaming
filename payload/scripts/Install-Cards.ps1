@@ -153,7 +153,7 @@ Write-Host "常驻端口  $($live -join ', ')"
 Write-Host ''
 Write-Host '==== 完成 ===='
 Write-Host '下一步（在 Moonlight 里，每个设备各做一次）：'
-Write-Host '  1. 点开每张「桌面 · xxx」卡的设置'
+Write-Host '  1. 点开每张分辨率卡的设置'
 Write-Host '  2. 把分辨率设成卡名对应的档位，帧率按需'
 Write-Host '  3. 打开「优化游戏设置」——不开的话 Sunshine 不改分辨率'
 Write-Host '  4. 之后点卡即用该档位，不需要每次改设置'

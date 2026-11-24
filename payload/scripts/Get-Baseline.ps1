@@ -175,14 +175,33 @@ if ($activeMon.Count -eq 0) {
     Add-Row 'E-01' '活动显示输出' "$($activeMon.Count) 个" '⚠️' "同名屏多实例: $($monNames -join ', '); $res"
 }
 
+# E-02：vdd 方案下必须绑 device_id（GUID）。\\.\DISPLAYn 在设备重新启用后会变，
+# Sunshine 找不到就静默回退物理屏——连接成功但分辨率不变，极难察觉。
 if ($ConfData.ContainsKey('output_name')) {
-    $on = $ConfData['output_name']
-    Add-Row 'E-02' '输出屏绑定' $(if ($on) { $on } else { '空（自动）' }) '✅' ''
+    $on = [string]$ConfData['output_name']
+    if (-not $on) {
+        Add-Row 'E-02' '输出屏绑定' '空（自动）' '✅' ''
+    } elseif ($on -match '^\{[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\}$') {
+        Add-Row 'E-02' '输出屏绑定' $on '✅' 'device_id，跨重启稳定'
+    } elseif ($on -match '^\\\\.\\DISPLAY\d+$') {
+        Add-Row 'E-02' '输出屏绑定' $on '⚠️' 'GDI 编号会变，重启后可能静默回退物理屏；改用 device_id'
+    } else {
+        Add-Row 'E-02' '输出屏绑定' $on '✅' ''
+    }
 } else { Add-Row 'E-02' '输出屏绑定' '空（自动）' '✅' '' }
 
+# E-03：两种方案各有正确值——物理屏方案 disabled（不接管），
+# 虚拟屏方案 ensure_only_display（连接时只留虚拟屏、断开回滚）。
+# 只有 ensure_active / ensure_primary / verify_only 才是偏离。
 if ($ConfData.ContainsKey('dd_configuration_option')) {
-    $dd = $ConfData['dd_configuration_option']
-    Add-Row 'E-03' '内置切屏' $dd $(if ($dd -eq 'disabled') { '✅' } else { '⚠️' }) ''
+    $dd = [string]$ConfData['dd_configuration_option']
+    if ($dd -eq 'disabled') {
+        Add-Row 'E-03' '内置切屏' $dd '✅' '不接管拓扑'
+    } elseif ($dd -eq 'ensure_only_display') {
+        Add-Row 'E-03' '内置切屏' $dd '✅' '虚拟屏方案；回滚风险见 显示拓扑卡死'
+    } else {
+        Add-Row 'E-03' '内置切屏' $dd '⚠️' '非预期取值'
+    }
 } else { Add-Row 'E-03' '内置切屏' '未设置（默认 disabled）' '✅' '' }
 
 $hdr = Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\GraphicsDrivers' -Name EnableHDR -ErrorAction SilentlyContinue

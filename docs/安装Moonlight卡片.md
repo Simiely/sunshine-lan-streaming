@@ -80,7 +80,7 @@ $f = "$env:ProgramFiles\Sunshine\config\apps.json"
 (Get-Content $f -Raw -Encoding UTF8 | ConvertFrom-Json).apps.name
 ```
 
-应看到 8 张卡。真机验证：点「桌面 · 2K」连接后，`dxgi-info` 里虚拟屏分辨率应为 `2560x1440`。
+应看到 8 张卡（6 张分辨率卡 + `Desktop` + `Steam Big Picture`）。真机验证：点 `通用 2560x1440@60` 连接后，`dxgi-info` 里虚拟屏分辨率应为 `2560x1440`。
 
 ## 边界
 

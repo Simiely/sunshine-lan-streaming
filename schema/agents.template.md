@@ -1,6 +1,6 @@
 # AGENTS.md · sunshine-lan-streaming 项目规则
 
-> 📌 **文档基线**：2026-11-25（`9fdba16`）—— 虚拟屏原生 ensure_only_display + 6 张纯大字封面卡片 + 设备硬件标准化，zip 自包含全部组件（v0.5.7，knowledge profile）
+> 📌 **文档基线**：2026-11-25（`9fdba16` 起，含未提交的改动）—— 虚拟屏原生 ensure_only_display + 6 张纯大字封面卡片 + 设备硬件标准化，zip 自包含全部组件（v0.5.8，knowledge profile）
 > **更新文档后请更新此行**（日期 + 新 commit hash），并在 CHANGELOG 追加版本
 
 本仓库是 sunshine-lan-streaming 的知识库。回答相关问题前先读这份，再读 [docs/index.md](docs/index.md)。
