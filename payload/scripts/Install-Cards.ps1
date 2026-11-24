@@ -46,16 +46,35 @@ if (-not (Test-Path -LiteralPath $AppsFile)) {
 # 卡片名 = 设备名 + 分辨率@刷新率，一眼能看出这张卡对应哪台客户端、哪个档位。
 # Moonlight 按卡保存分辨率设置；卡片名就是识别依据，不要用「1080p」这类会被
 # 误读成"分辨率已固定"的写法。
+# 封面图由 tools/build/Gen-Covers.py 生成，部署到 Sunshine 的 assets\covers\。
+# image-path 用相对 assets 的路径，跨机器有效（不能写绝对路径）。
 $cards = @(
-    [pscustomobject]@{ Name = 'Find X9 Pro 2772x1272@60'; Note = 'OPPO 手机竖屏原生' }
-    [pscustomobject]@{ Name = 'iPhone 17 Pro Max 2868x1320@60'; Note = 'iPhone 竖屏原生' }
-    [pscustomobject]@{ Name = 'iPad Pro 12.9 2732x2048@120'; Note = 'iPad 平板' }
-    [pscustomobject]@{ Name = 'Switch 底座 1920x1080@60'; Note = 'Switch / 电视 1080p' }
-    [pscustomobject]@{ Name = '电视 4K 3840x2160@60'; Note = '4K 大屏' }
-    [pscustomobject]@{ Name = '通用 1280x720@60'; Note = '低带宽 / 远距离' }
-    [pscustomobject]@{ Name = '通用 2560x1440@60'; Note = '2K 桌面' }
-    [pscustomobject]@{ Name = '通用 1440x900@60'; Note = '16:10 笔记本' }
+    [pscustomobject]@{ Name = 'Find X9 Pro 2772x1272@60'; Image = 'covers/res-2772x1272.png'; Note = 'OPPO 手机宽屏原生' }
+    [pscustomobject]@{ Name = 'iPhone 17 Pro Max 2868x1320@60'; Image = 'covers/res-2868x1320.png'; Note = 'iPhone 宽屏原生' }
+    [pscustomobject]@{ Name = 'iPad Pro 12.9 2732x2048@120'; Image = 'covers/res-2732x2048.png'; Note = 'iPad 平板 4:3' }
+    [pscustomobject]@{ Name = 'Switch 底座 1920x1080@60'; Image = 'covers/res-1920x1080.png'; Note = 'Switch / 电视 1080p' }
+    [pscustomobject]@{ Name = '电视 4K 3840x2160@60'; Image = 'covers/res-3840x2160.png'; Note = '4K 大屏' }
+    [pscustomobject]@{ Name = '通用 1280x720@60'; Image = 'covers/res-1280x720.png'; Note = '低带宽 / 远距离' }
+    [pscustomobject]@{ Name = '通用 2560x1440@60'; Image = 'covers/res-2560x1440.png'; Note = '2K 桌面' }
+    [pscustomobject]@{ Name = '通用 1440x900@60'; Image = 'covers/res-1440x900.png'; Note = '16:10 笔记本' }
 )
+
+# ---------- 部署封面 ----------
+# Sunshine 先按 SUNSHINE_ASSETS_DIR（安装目录\assets）找图，所以 image-path
+# 写 covers\xxx.png 就能跨机器生效；绝对路径换机就废。
+$coverSrc = Join-Path (Split-Path $PSScriptRoot -Parent) 'covers'
+$coverDst = Join-Path $env:ProgramFiles 'Sunshine\assets\covers'
+if (Test-Path -LiteralPath $coverSrc) {
+    if (-not (Test-Path -LiteralPath $coverDst)) { New-Item -ItemType Directory -Path $coverDst -Force | Out-Null }
+    $copied = 0
+    Get-ChildItem -LiteralPath $coverSrc -Filter '*.png' -File | ForEach-Object {
+        Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $coverDst $_.Name) -Force
+        $copied++
+    }
+    Write-Host "部署封面  $copied 张 → $coverDst"
+} else {
+    Write-Host 'WARN 包内没有 covers\ 目录，卡片只能用默认图'
+}
 
 try { $json = Get-Content -LiteralPath $AppsFile -Raw -Encoding UTF8 | ConvertFrom-Json }
 catch { Write-Host "FAIL 解析 apps.json 失败：$($_.Exception.Message)"; exit 2 }
@@ -76,19 +95,21 @@ $added = 0
 $skipped = 0
 foreach ($c in $cards) {
     if ($existing.ContainsKey($c.Name)) {
+        $idx = 0
+        for ($i = 0; $i -lt $apps.Count; $i++) { if ($apps[$i].name -eq $c.Name) { $idx = $i; break } }
         if ($Force) {
-            $idx = 0
-            for ($i = 0; $i -lt $apps.Count; $i++) { if ($apps[$i].name -eq $c.Name) { $idx = $i; break } }
-            $apps[$idx] = [pscustomobject]@{ name = $c.Name; 'image-path' = 'desktop.png' }
-            Write-Host "覆盖卡片  $c.Name"
+            $apps[$idx] = [pscustomobject]@{ name = $c.Name; 'image-path' = $c.Image }
+            Write-Host "覆盖卡片  $($c.Name)"
         } else {
-            Write-Host "已存在    $c.Name（跳过）"
-            $skipped++
+            # 已有卡只补封面，保留用户改过的其他字段
+            $apps[$idx] | Add-Member -NotePropertyName 'image-path' -NotePropertyValue $c.Image -Force
+            Write-Host "更新封面  $($c.Name)"
         }
+        $skipped++
         continue
     }
-    $apps += [pscustomobject]@{ name = $c.Name; 'image-path' = 'desktop.png' }
-    Write-Host "新增卡片  $c.Name  ← $($c.Note)"
+    $apps += [pscustomobject]@{ name = $c.Name; 'image-path' = $c.Image }
+    Write-Host "新增卡片  $($c.Name)  ← $($c.Note)"
     $added++
 }
 

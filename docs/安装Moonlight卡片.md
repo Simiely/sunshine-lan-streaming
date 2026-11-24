@@ -34,6 +34,20 @@ related:
 
 脚本是**幂等**的：重跑不会重复加卡，也不覆盖已有同名卡（保护你在 Moonlight 侧的设置）。要强制覆盖加 `-Force`。
 
+## 每张卡有自己的封面
+
+`payload/covers/` 下 8 张 600×800 PNG，由 `tools/build/Gen-Covers.py` 生成——按各自宽高比画屏幕轮廓，配上大号分辨率和刷新率，一眼能区分 16:9 / 4:3 / 手机宽屏。
+
+安装时复制到 `C:\Program Files\Sunshine\assets\covers\`，`apps.json` 的 `image-path` 写相对路径（`covers/res-1920x1080.png`）。Sunshine 先按安装目录的 `assets\` 找图，所以换机器也不会失效；写绝对路径则会。
+
+改图后重生成：
+
+```powershell
+python tools/build/Gen-Covers.py
+```
+
+脚本里的 `CARDS` 列表就是唯一真源，改颜色/设备名后重跑即可，无需手工 P 图。
+
 ## 为什么卡片里不写分辨率
 
 看起来应该在每张卡的 `prep-cmd` 里写"切到 1080p"，但 v2026.516 的源码否定了这条路：

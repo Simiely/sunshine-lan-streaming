@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## v0.5.6 — 2026-11-25
+
+### 新增
+
+- 分辨率卡片封面：`tools/build/Gen-Covers.py` 生成 8 张 600×800 PNG（`payload/covers/`），按各自宽高比画屏幕轮廓 + 大号分辨率 + 刷新率徽章，16:9 / 4:3 / 手机宽屏一眼可辨。
+- `Install-Cards.ps1` 部署封面到 `Sunshine\assets\covers\`，`image-path` 写相对路径 `covers/res-<宽>x<高>.png`（Sunshine 按 `assets\` 解析，跨机器有效）；已有卡只补封面、不动其他字段。
+- `Build-Package.ps1` 自检新增 `covers\res-1920x1080.png`（17 项）。
+
+### 说明
+
+- 本机已应用：10 张卡各自指向对应封面，服务重启无 `Couldn't find app image` 警告。真机串流仍未验证。
+- 封面是程序绘制而非 AI 配图——分辨率数字必须准确，且要统一风格、可一键重生成。
+
 ## v0.5.5 — 2026-11-25
 
 ### 修正（重要）

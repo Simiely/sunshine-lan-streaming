@@ -259,7 +259,8 @@ try {
         'scripts\Install-Cards.ps1',
         'scripts\_Baseline.ps1',
         'conf\vdd-resolutions.txt',
-        'conf\devices\defaults.json'
+        'conf\devices\defaults.json',
+        'covers\res-1920x1080.png'
     )
     foreach ($lic in $licenseNeeded) { $must += ('licenses\' + $lic + '.txt') }
     foreach ($n in @($m.components.PSObject.Properties.Name)) {
