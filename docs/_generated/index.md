@@ -57,6 +57,7 @@ related: []
 | [4070S 从零部署闭环：装完即可串流，断开回到隐藏态](../reports/2026-11-25-4070s-部署验证.md) | active | @simiely | normal | `docs/部署清单.md` |
 | [真机通了，但不是走局域网通的](../reports/2026-11-24-安卓真机验证.md) | active | @simiely | normal | `docs/配置清单.md` |
 | [本机基线：4 项合格、7 项不合格、25 项待测](../reports/2026-11-24-本机基线.md) | archived | @simiely | normal | `docs/配置清单.md` |
+| [干净机器上三步全绿：ViGEmBus 自动安装闭环，无需重启即可全新部署](../reports/2026-11-26-redmibookpro15x-全新安装验证.md) | active | @simiely | normal | `docs/部署清单.md` |
 | [L1 通过：三项配置生效，一条判据被证伪](../reports/2026-11-24-安装验证.md) | archived | @simiely | normal | `docs/配置清单.md` |
 
 ## Pitfalls
@@ -68,6 +69,7 @@ related: []
 | [虚拟屏没被调用有两个坑：prep 时序，和绑了 DISPLAY 编号](../prep命令改不了捕获屏.md) | high | 配好 global_prep_cmd（do 启用虚拟屏并 DisplaySwitch /external）后，Moonlight 点卡片连接失败。sunshine.log 停在编码器探测中途（最后一行是某个 encoder 的 AMF via D3D11），既没有 Executing Do Cmd，也没有 New streaming session started；Switch-Vdd 的日志里没有本次 connect 记录。 | `streaming.on-demand-vdd-choice`, `streaming.virtual-display` | active |
 | [单屏机器装完 VDD，DXGI 里没有虚拟屏](../单屏装虚拟屏不枚举.md) | high | MTT VDD 驱动装好了（Get-PnpDevice 显示 ROOT\DISPLAY\0001，Status=OK），但 dxgi-info 只列出物理屏一块，等待 60 秒仍无新输出，安装脚本报「无法唯一确定虚拟屏对应的 DISPLAYn」而中止，sunshine.conf 未被改动。 | `hardware.device-matrix`, `streaming.virtual-display` | active |
 | [改了 vdd_settings.xml 却不生效，虚拟屏永远停在 800x600](../虚拟屏配置不生效.md) | high | vdd_settings.xml 里的分辨率列表已经按设备改好，sunshine.conf 也指向了虚拟屏，但 DXGI 里那块屏始终是 800x600。驱动日志没有任何报错，甚至明确打印 "Using vdd_settings.xml"。 | `streaming.config-inventory`, `streaming.virtual-display` | active |
+| [ViGEmBus 卸载残留不必重启：先删设备节点再停服务就能当天重装](../ViGEmBus卸载残留不必重启.md) | medium | 重装 v0.6.0 时 Install.ps1 报 ViGEmBus 服务处于 StopPending，安装器退出 0 但服务起不来，提示"请重启 Windows 后重新运行"。 | `streaming.4070s-deploy-20261125`, `streaming.version-matrix` | active |
 
 ## 全部页面
 
@@ -88,6 +90,7 @@ related: []
 | `streaming.config-inventory` | [36 项对得上，才叫装好了](../配置清单.md) | reference | standard | active |
 | `streaming.deploy-checklist` | [局域网串流上线前要过的六道检查](../部署清单.md) | how-to | standard | active |
 | `streaming.display-topology-freeze` | [用 ensure_only_display 会让断开串流时卡死两分钟](../显示拓扑卡死.md) | explanation | pitfall | active |
+| `streaming.fresh-install-redmibookpro15x-20261126` | [干净机器上三步全绿：ViGEmBus 自动安装闭环，无需重启即可全新部署](../reports/2026-11-26-redmibookpro15x-全新安装验证.md) | reference | report | active |
 | `streaming.install-moonlight-cards` | [用 6 张分辨率卡片代替在客户端反复改设置](../安装Moonlight卡片.md) | how-to | standard | active |
 | `streaming.install-verify-20261124` | [L1 通过：三项配置生效，一条判据被证伪](../reports/2026-11-24-安装验证.md) | reference | report | archived |
 | `streaming.moonlight-card-resolution` | [卡片选分辨率靠 dd_resolution_option=auto，静态表是它的候选集](../Moonlight卡片分辨率.md) | explanation | note | active |
@@ -98,4 +101,5 @@ related: []
 | `streaming.vdd-config-silent-ignore` | [改了 vdd_settings.xml 却不生效，虚拟屏永远停在 800x600](../虚拟屏配置不生效.md) | explanation | pitfall | active |
 | `streaming.vdd-idle-hide` | [待机时虚拟屏必须离开桌面拓扑，连接时再交给 Sunshine 拉起](../虚拟屏待机隐藏.md) | how-to | standard | active |
 | `streaming.version-matrix` | [官方只有一个版本适合长期停留：2026.516](../版本矩阵.md) | reference | note | active |
+| `streaming.vigem-uninstall-no-reboot` | [ViGEmBus 卸载残留不必重启：先删设备节点再停服务就能当天重装](../ViGEmBus卸载残留不必重启.md) | explanation | pitfall | active |
 | `streaming.virtual-display` | [虚拟屏要"先切屏再连接"，且切换权不能交给 Sunshine](../虚拟显示器方案.md) | explanation | standard | active |

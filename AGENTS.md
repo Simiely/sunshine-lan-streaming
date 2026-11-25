@@ -1,6 +1,6 @@
 # AGENTS.md · sunshine-lan-streaming 项目规则
 
-> 📌 **文档基线**：2026-11-25（`4e0d590`）—— ViGEmBus 自适应安装 + 深色结果弹窗 + 虚拟屏待机隐藏，zip 自包含全部组件（v0.6.0，knowledge profile）
+> 📌 **文档基线**：2026-11-26（待提交）—— 干净机全新安装闭环：ViGEmBus 无重启清理 + 三步全绿实测；zip 仍为 v0.6.0（knowledge profile）
 > **更新文档后请更新此行**（日期 + 新 commit hash），并在 CHANGELOG 追加版本
 
 本仓库是 sunshine-lan-streaming 的知识库。回答相关问题前先读这份，再读 [docs/index.md](docs/index.md)。
@@ -35,8 +35,8 @@ python -m pip install -r requirements.txt   # 文档检查依赖
 
 ## 当前规模
 
-- 页面：26（critical=14）
-- 按 type：explanation=9, how-to=4, reference=13
+- 页面：28（critical=15）
+- 按 type：explanation=10, how-to=4, reference=14
 - 词表版本：2.9.1
 
 ## 边界

@@ -50,6 +50,7 @@ related: []
 - [配置清单](配置清单.md) — 10 组 36 项基线，每项带取法、合格线与偏离处置
 - [本机基线（2026-11-24）](reports/2026-11-24-本机基线.md) — 4070S 宿主首次实测：4 项合格、7 项偏离、25 项待测
 - [4070S 部署验证（2026-11-25）](reports/2026-11-25-4070s-部署验证.md) — 从零部署 + 连接/断开回滚闭环；ViGEmBus 自动安装与局域网发现待复测
+- [全新安装验证（2026-11-26）](reports/2026-11-26-redmibookpro15x-全新安装验证.md) — 干净机上三步全绿，ViGEmBus 自动安装闭环且无需重启；真机串流仍待验证
 - [redmibookpro15x 本机基线（2026-11-24）](reports/2026-11-24-redmibookpro15x-本机基线.md) — 第二台设备：780M 核显、3200x2000 单屏，7 项合格、8 项偏离、21 项待测
 - [redmibookpro15x 安装验证（2026-11-24）](reports/2026-11-24-redmibookpro15x-安装验证.md) — Sunshine 2026.516 装上，15 项合格；未配对客户端，串流与局域网拓扑尚未验证
 - [redmibookpro15x 虚拟屏安装（2026-11-24）](reports/2026-11-24-redmibookpro15x-虚拟屏安装.md) — MTT VDD 装上，单屏需 extend；已切 vdd 基线，中文保留
@@ -60,6 +61,7 @@ related: []
 ### 踩坑
 
 - [显示拓扑卡死](显示拓扑卡死.md) — `ensure_only_display` 阻塞两分钟的根因与规避
+- [ViGEmBus 卸载残留不必重启](ViGEmBus卸载残留不必重启.md) — 先删设备再停服务就不会留下 StopPending；中文 PnP 输出会让正则漏判
 - [配置写入覆盖](配置写入覆盖.md) — `POST /api/config` 整体替换，会把 `upnp` 悄悄改回 `enabled`
 - [虚拟屏配置不生效](虚拟屏配置不生效.md) — `vdd_settings.xml` 带 BOM 即解析失败，虚拟屏恒为 800x600
 - [单屏装虚拟屏不枚举](单屏装虚拟屏不枚举.md) — 驱动 OK 但 DXGI 只有物理屏；`DisplaySwitch /extend` 一次解决
