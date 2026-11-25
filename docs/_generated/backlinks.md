@@ -42,6 +42,7 @@ related: []
 | `streaming.deploy-checklist` | [多设备部署前先固定设备 ID 与硬件画像](../设备硬件标准.md) | see-also | `docs/设备硬件标准.md` |
 | `streaming.deploy-checklist` | [用 API 改一个键，会把其余键一起清空](../配置写入覆盖.md) | applies-to（反向：has-pitfall；来自 applies_to 字段） | `docs/配置写入覆盖.md` |
 | `streaming.display-topology-freeze` | [局域网串流优先留在官方分支，只有需要虚拟显示器才换分支](../分支选型.md) | see-also | `docs/分支选型.md` |
+| `streaming.display-topology-freeze` | [待机时虚拟屏必须离开桌面拓扑，连接时再交给 Sunshine 拉起](../虚拟屏待机隐藏.md) | depends-on（反向：depended-on-by） | `docs/虚拟屏待机隐藏.md` |
 | `streaming.display-topology-freeze` | [官方只有一个版本适合长期停留：2026.516](../版本矩阵.md) | depends-on（反向：depended-on-by） | `docs/版本矩阵.md` |
 | `streaming.display-topology-freeze` | [虚拟屏要"先切屏再连接"，且切换权不能交给 Sunshine](../虚拟显示器方案.md) | depends-on（反向：depended-on-by） | `docs/虚拟显示器方案.md` |
 | `streaming.moonlight-card-resolution` | [用 6 张分辨率卡片代替在客户端反复改设置](../安装Moonlight卡片.md) | see-also | `docs/安装Moonlight卡片.md` |
@@ -54,6 +55,7 @@ related: []
 | `streaming.single-display-vdd-no-enumerate` | [780M 单屏机装上了虚拟屏：需要手动 extend 一次](../reports/2026-11-24-redmibookpro15x-虚拟屏安装.md) | spawned-from（反向：spawned） | `docs/reports/2026-11-24-redmibookpro15x-虚拟屏安装.md` |
 | `streaming.single-display-vdd-no-enumerate` | [按需虚拟屏用 Sunshine 原生 ensure_only_display，prep 方案已实测否决](../按需虚拟屏选型.md) | see-also | `docs/按需虚拟屏选型.md` |
 | `streaming.vdd-config-silent-ignore` | [出包只有两步：先拉资产，再打 zip](../出包流程.md) | see-also | `docs/出包流程.md` |
+| `streaming.vdd-idle-hide` | [4070S 从零部署闭环：装完即可串流，断开回到隐藏态](../reports/2026-11-25-4070s-部署验证.md) | see-also | `docs/reports/2026-11-25-4070s-部署验证.md` |
 | `streaming.version-matrix` | [局域网串流上线前要过的六道检查](../部署清单.md) | depends-on（反向：depended-on-by） | `docs/部署清单.md` |
 | `streaming.version-matrix` | [用 ensure_only_display 会让断开串流时卡死两分钟](../显示拓扑卡死.md) | applies-to（反向：has-pitfall；来自 applies_to 字段） | `docs/显示拓扑卡死.md` |
 | `streaming.version-matrix` | [用 ensure_only_display 会让断开串流时卡死两分钟](../显示拓扑卡死.md) | see-also | `docs/显示拓扑卡死.md` |
@@ -67,3 +69,4 @@ related: []
 | `streaming.virtual-display` | [单屏机器装完 VDD，DXGI 里没有虚拟屏](../单屏装虚拟屏不枚举.md) | see-also | `docs/单屏装虚拟屏不枚举.md` |
 | `streaming.virtual-display` | [改了 vdd_settings.xml 却不生效，虚拟屏永远停在 800x600](../虚拟屏配置不生效.md) | applies-to（反向：has-pitfall；来自 applies_to 字段） | `docs/虚拟屏配置不生效.md` |
 | `streaming.virtual-display` | [改了 vdd_settings.xml 却不生效，虚拟屏永远停在 800x600](../虚拟屏配置不生效.md) | see-also | `docs/虚拟屏配置不生效.md` |
+| `streaming.virtual-display` | [待机时虚拟屏必须离开桌面拓扑，连接时再交给 Sunshine 拉起](../虚拟屏待机隐藏.md) | see-also | `docs/虚拟屏待机隐藏.md` |

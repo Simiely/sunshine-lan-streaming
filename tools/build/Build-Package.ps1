@@ -174,12 +174,16 @@ Sunshine 局域网串流 · 离线安装包 v$version
     双击  安装.cmd
     装完即可用：Web UI 已是中文（locale=zh），局域网安全基线、
     显示与编码开关全部写入，服务自启并就绪，不需要进设置页手选。
+    若机器缺 ViGEmBus（虚拟手柄驱动），会用 Sunshine 自带的安装器
+    静默安装；装完弹窗显示 Web UI 地址与账号密码，可保存为 TXT。
 
 二、启用虚拟显示器
     双击  安装虚拟屏.cmd
     装完会把 Sunshine 切到虚拟屏捕获；单屏笔记本若 DXGI 暂时看不到
     新屏，脚本会自动执行一次 DisplaySwitch /extend 让它出现。
     连上时只保留虚拟屏（物理屏息屏），断开自动回滚物理屏。
+    最后会把虚拟屏从桌面拓扑里隐藏（只动虚拟屏，物理屏布局不变），
+    待机时桌面和以前一样；需要排查时运行 scripts\Hide-Vdd.ps1 -Show。
 
     前提：Moonlight 客户端打开「优化游戏设置」，否则客户端请求的
     分辨率不会切换，画面会停在预设的第一档。
@@ -261,6 +265,8 @@ try {
         'scripts\Install.ps1',
         'scripts\Install-Vdd.ps1',
         'scripts\Install-Cards.ps1',
+        'scripts\Show-Result.ps1',
+        'scripts\Hide-Vdd.ps1',
         'scripts\_Baseline.ps1',
         'conf\vdd-resolutions.txt',
         'conf\devices\defaults.json',

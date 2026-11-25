@@ -1,0 +1,10 @@
+{
+  "_comment": "4070S 宿主：RTX 4070 SUPER + UHD 770，双 2560x1440@120，device_id=4070s（COMPUTERNAME=4070S）。",
+  "anchor_resolution": "1920x1080",
+  "physical_resolution": "2560x1440",
+  "expected_initial_resolution": null,
+  "nic_deny_pattern": "ZeroTier|VMware|Loopback|vgate|Oray|RayLink|本地连接",
+  "conflict_services": ["AweSunService", "RayLinkService", "ToDesk_Service"],
+  "gpu_vendor_pattern": "(?i)NVIDIA",
+  "vdd_output_strategy": "snapshot-diff"
+}

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "package": {
     "name": "sunshine-lan-streaming",
-    "version": "0.5.8",
+    "version": "0.6.0",
     "target": "windows-amd64",
     "min_os": "10.0.19041",
     "scope": "单台 Windows 宿主、仅局域网、Moonlight 客户端"
@@ -67,19 +67,23 @@
         "physical_resolution": "3200x2000",
         "status": "baseline-only",
         "report": "docs/reports/2026-11-24-redmibookpro15x-本机基线.md"
+      },
+      {
+        "device_id": "4070s",
+        "label": "4070S 宿主",
+        "gpu": "RTX 4070 SUPER + UHD 770",
+        "encoder": "hevc_nvenc",
+        "physical_resolution": "2560x1440",
+        "status": "baseline-only",
+        "report": "docs/reports/2026-11-25-4070s-部署验证.md"
       }
     ],
-    "note": "4070S 宿主的 COMPUTERNAME 未记录在旧报告中，device_id 待补；不要猜。"
-  },
-  "deferred": {
-    "vigembus": {
-      "reason": "仅虚拟手柄需要，非首版必需",
-      "trap": "6.2.0 起 Moonlight 便携版若从 6.1.x 同目录升级，须先删 tls/qopensslbackend.dll，否则启动崩溃"
-    }
+    "note": "两台设备的 device_id 均已按 COMPUTERNAME 规则记录；新增设备先跑 Get-Baseline.ps1 -Json，不要手填。"
   },
   "notes": {
     "single_source_of_truth": "版本、URL、哈希只写在本文件；构建脚本不得硬编码",
     "hash_policy": "sha256 来自上游 Release 资产页，构建时用 Get-FileHash 复核，不一致即中止",
-    "redistribution": "GPL-3.0 再分发须随包附完整许可证文本与对应 tag 的源码地址"
+    "redistribution": "GPL-3.0 再分发须随包附完整许可证文本与对应 tag 的源码地址",
+    "vigembus": "虚拟手柄驱动由 Sunshine MSI 自带的 scripts\\vigembus_installer.exe 静默安装（/exenoui /qn /norestart），没有独立 vendor 资产；Install.ps1 会按服务状态判断是否需要装"
   }
 }

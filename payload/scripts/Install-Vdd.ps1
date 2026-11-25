@@ -691,6 +691,15 @@ if ($ExitCode -eq 0) {
     Write-Host ''
     Write-Host '若断开后显示没恢复、或主机卡住，立刻运行 payload\恢复显示.cmd。'
     Write-Host '要退回物理屏方案：本脚本加 -Uninstall。'
+
+    # 待机隐藏：把虚拟屏从桌面拓扑移除，物理屏布局保持不变；
+    # Sunshine 连接时用 ensure_only_display 拉起，断开回滚到这个隐藏态。
+    Write-Host ''
+    Write-Host '待机隐藏  把虚拟屏从桌面拓扑移除…'
+    & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'Hide-Vdd.ps1')
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host 'WARN 虚拟屏隐藏失败；可手动运行 scripts\Hide-Vdd.ps1 重试'
+    }
 } else {
     Write-Host '配置已写入但服务或端口未就绪，先看 sunshine.log 再重试。'
 }

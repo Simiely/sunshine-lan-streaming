@@ -244,6 +244,47 @@ $Exe = Join-Path $InstallDir 'sunshine.exe'
 $ConfigDir = Join-Path $InstallDir 'config'
 $Conf = Join-Path $ConfigDir 'sunshine.conf'
 
+# ---------- 5b. 虚拟手柄驱动（ViGEmBus） ----------
+# Sunshine MSI 自带 scripts\vigembus_installer.exe，但安装器本身不会执行它；
+# 这里按需静默安装，让"手柄能用"成为部署结果的一部分。缺失不影响串流。
+Step "虚拟手柄驱动"
+
+$ViGEmKey = 'HKLM:\SYSTEM\CurrentControlSet\Services\ViGEmBus'
+$vigemSvc = Get-Service -Name 'ViGEmBus' -ErrorAction SilentlyContinue
+$vigemReg = Test-Path -LiteralPath $ViGEmKey
+$vigemInstalledNow = $false
+if ($vigemSvc -and $vigemReg) {
+    Ok "ViGEmBus 已安装（服务 $($vigemSvc.Status)）"
+} elseif ($vigemSvc -and -not $vigemReg -and $vigemSvc.Status -eq 'StopPending') {
+    # 卸载残留：服务对象卡在删除挂起，注册表已无，安装器无法重建服务，只能重启
+    Fail 'ViGEmBus 服务处于删除挂起状态（StopPending），请重启 Windows 后重新运行'
+} else {
+    $vigemSetup = Join-Path $InstallDir 'scripts\vigembus_installer.exe'
+    if (-not (Test-Path -LiteralPath $vigemSetup)) {
+        Warn '包内没有 scripts\vigembus_installer.exe，跳过虚拟手柄驱动'
+    } else {
+        Info '未检测到 ViGEmBus，开始静默安装…'
+        # Advanced Installer 引导程序：/exenoui 关 UI，/qn 静默，/norestart 不重启
+        $vp = Start-Process -FilePath $vigemSetup -Wait -PassThru -ArgumentList '/exenoui','/qn','/norestart'
+        if ($vp.ExitCode -ne 0 -and $vp.ExitCode -ne 3010) {
+            Fail "ViGEmBus 安装失败（退出码 $($vp.ExitCode)）"
+        } else {
+            for ($i = 0; $i -lt 60; $i++) {
+                Start-Sleep -Seconds 1
+                $vigemSvc = Get-Service -Name 'ViGEmBus' -ErrorAction SilentlyContinue
+                if ($vigemSvc -and (Test-Path -LiteralPath $ViGEmKey)) { break }
+            }
+            if ($vigemSvc -and (Test-Path -LiteralPath $ViGEmKey)) {
+                $vigemInstalledNow = $true
+                Ok "ViGEmBus 安装完成（服务 $($vigemSvc.Status)）"
+                if ($vp.ExitCode -eq 3010) { Info '安装器提示需重启后驱动才会完全生效' }
+            } else {
+                Fail 'ViGEmBus 安装器返回成功，但 60 秒内未出现服务；请重启后重新运行'
+            }
+        }
+    }
+}
+
 # ---------- 6. 生成凭据 ----------
 Step "设置 Web UI 凭据"
 
@@ -394,9 +435,20 @@ $credFile = Join-Path $credPath 'credentials.txt'
 Info "已保存到: $credFile"
 
 # ---------- 结果落盘 ----------
-# 提权窗口的输出无法被外部读取，因此关键结论另存一份 JSON，供后续核对与报告引用。
+# 提权窗口的输出无法被外部读取，因此关键结论另存一份 JSON，供后续核对、报告引用
+# 和 Show-Result.ps1 弹窗使用。
 $ports = @()
 if ($listen) { $ports = @($listen.LocalPort | Sort-Object -Unique) }
+# 默认路由所在网卡的地址，才是客户端该填的局域网地址
+$lanIp = $null
+$route = @(Get-NetRoute -DestinationPrefix '0.0.0.0/0' -ErrorAction SilentlyContinue |
+           Sort-Object RouteMetric | Select-Object -First 1)
+if ($route.Count -gt 0) {
+    $lanIp = (Get-NetIPAddress -AddressFamily IPv4 -InterfaceIndex $route[0].InterfaceIndex -ErrorAction SilentlyContinue |
+              Where-Object { $_.IPAddress -notlike '169.254.*' } |
+              Select-Object -First 1).IPAddress
+}
+if (-not $lanIp -and $ips) { $lanIp = @($ips)[0] }
 $jsonResult = [ordered]@{
     timestamp           = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
     device_id           = Get-DeviceId
@@ -404,11 +456,16 @@ $jsonResult = [ordered]@{
     version             = $v
     install_dir         = $InstallDir
     username            = $Username
+    password            = $Password
+    web_ui_local        = 'https://localhost:47990'
+    web_ui_lan          = $(if ($lanIp) { "https://${lanIp}:47990" } else { $null })
     credential_file     = $credFile
     service_status      = $(if ($s) { "$($s.Status)" } else { 'Missing' })
     service_start_type  = $(if ($s) { "$($s.StartType)" } else { 'Missing' })
     listen_ports        = $ports
     firewall_rules      = $(if ($fw) { @($fw).Count } else { 0 })
+    vigem_service       = $(if ($vigemSvc) { "$($vigemSvc.Status)" } else { $null })
+    vigem_installed_now = $vigemInstalledNow
     config_written      = @($baseline.Keys)
     warnings            = @($script:Warnings)
     failures            = @($script:Failures)

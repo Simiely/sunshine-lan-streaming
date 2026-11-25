@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## v0.6.0 — 2026-11-25
+
+### 新增
+
+- **ViGEmBus 自适应安装**：`Install.ps1` 在定位安装目录后检查 `ViGEmBus` 服务；缺失时运行 Sunshine MSI 自带的 `scripts\vigembus_installer.exe /exenoui /qn /norestart`（实测退出码 0、服务 Running），最多等 60 秒，失败记入结果并提示重启。检测同时看服务与注册表，兼容删除挂起状态。
+- **深色结果弹窗**：新增 `scripts\Show-Result.ps1`。安装结束显示 Web UI 地址（本地 + 默认路由网卡）、账号密码、服务/端口、ViGEmBus 状态与警告；「保存为 TXT…」成功后连同控制台窗口一起自动退出。
+- **待机隐藏虚拟屏**：新增 `scripts\Hide-Vdd.ps1`，走 CCD 只停用虚拟屏的 path，物理屏布局不动；`Install-Vdd.ps1` 装完自动调用。物理屏数量为 0 时先 `DisplaySwitch /extend` 恢复再隐藏，并校验数据库当前条目与"仅 VDD"快路径。
+- **4070s 设备档案**：新增 `payload/conf/devices/4070s.json`；`manifest/components.json` 的 `device_profiles.known` 补 `4070s`，`deferred.vigembus` 已实现，安装方式改记到 `notes.vigembus`。
+- 文档：新增 [虚拟屏待机隐藏](docs/虚拟屏待机隐藏.md) 与 [4070s 部署验证](docs/reports/2026-11-25-4070s-部署验证.md)；设备矩阵补 `4070s` 行；虚拟显示器方案改指向 CCD 隐藏。
+
+### 修正
+
+- `Get-Baseline.ps1` A-04 改为"服务优先、卸载表兜底"：ViGEmBus 1.21 实测没有卸载登记项，只认卸载表会误判"未安装"。
+
+### 说明
+
+- `安装.cmd` 在安装结束后调用结果弹窗；未保存结果时保留控制台便于看日志，保存成功才整体关闭。
+- 结果 JSON 增加 `password`、`web_ui_local`、`web_ui_lan`、`vigem_service`、`vigem_installed_now`；凭据仍同时写入设备状态目录的 `credentials.txt`。
+
 ## v0.5.8 — 2026-11-25
 
 ### 修正（严格审核发现）

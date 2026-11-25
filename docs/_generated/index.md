@@ -25,6 +25,7 @@ related: []
 | [局域网串流上线前要过的六道检查](../部署清单.md) | standard | active | @simiely | critical | `AGENTS.md` |
 | [用 6 张分辨率卡片代替在客户端反复改设置](../安装Moonlight卡片.md) | standard | active | @simiely | normal | `payload/scripts/Install-Cards.ps1` |
 | [出包只有两步：先拉资产，再打 zip](../出包流程.md) | standard | active | @simiely | critical | `tools/build/Build-Package.ps1` |
+| [待机时虚拟屏必须离开桌面拓扑，连接时再交给 Sunshine 拉起](../虚拟屏待机隐藏.md) | standard | active | @simiely | normal | `payload/scripts/Hide-Vdd.ps1` |
 
 ### reference
 
@@ -53,6 +54,7 @@ related: []
 | [780M 核显机装上了 Sunshine：15 项合格，但还没接客户端](../reports/2026-11-24-redmibookpro15x-安装验证.md) | active | @simiely | normal | `docs/配置清单.md` |
 | [按需虚拟屏第一次尝试失败：prep 切屏卡死连接，改用原生 ensure_only_display](../reports/2026-11-24-redmibookpro15x-按需虚拟屏.md) | active | @simiely | normal | `docs/prep命令改不了捕获屏.md` |
 | [780M 单屏机装上了虚拟屏：需要手动 extend 一次](../reports/2026-11-24-redmibookpro15x-虚拟屏安装.md) | active | @simiely | normal | `docs/配置清单.md` |
+| [4070S 从零部署闭环：装完即可串流，断开回到隐藏态](../reports/2026-11-25-4070s-部署验证.md) | active | @simiely | normal | `docs/部署清单.md` |
 | [真机通了，但不是走局域网通的](../reports/2026-11-24-安卓真机验证.md) | active | @simiely | normal | `docs/配置清单.md` |
 | [本机基线：4 项合格、7 项不合格、25 项待测](../reports/2026-11-24-本机基线.md) | archived | @simiely | normal | `docs/配置清单.md` |
 | [L1 通过：三项配置生效，一条判据被证伪](../reports/2026-11-24-安装验证.md) | archived | @simiely | normal | `docs/配置清单.md` |
@@ -78,6 +80,7 @@ related: []
 | `hardware.install-redmibookpro15x-20261124` | [780M 核显机装上了 Sunshine：15 项合格，但还没接客户端](../reports/2026-11-24-redmibookpro15x-安装验证.md) | reference | report | active |
 | `hardware.ondemand-vdd-redmibookpro15x-20261124` | [按需虚拟屏第一次尝试失败：prep 切屏卡死连接，改用原生 ensure_only_display](../reports/2026-11-24-redmibookpro15x-按需虚拟屏.md) | reference | report | active |
 | `hardware.vdd-install-redmibookpro15x-20261124` | [780M 单屏机装上了虚拟屏：需要手动 extend 一次](../reports/2026-11-24-redmibookpro15x-虚拟屏安装.md) | reference | report | active |
+| `streaming.4070s-deploy-20261125` | [4070S 从零部署闭环：装完即可串流，断开回到隐藏态](../reports/2026-11-25-4070s-部署验证.md) | reference | report | active |
 | `streaming.android-verify-20261124` | [真机通了，但不是走局域网通的](../reports/2026-11-24-安卓真机验证.md) | reference | report | active |
 | `streaming.baseline-20261124` | [本机基线：4 项合格、7 项不合格、25 项待测](../reports/2026-11-24-本机基线.md) | reference | report | archived |
 | `streaming.branch-selection` | [局域网串流优先留在官方分支，只有需要虚拟显示器才换分支](../分支选型.md) | explanation | decision | active |
@@ -93,5 +96,6 @@ related: []
 | `streaming.prep-cmd-cannot-switch-capture` | [虚拟屏没被调用有两个坑：prep 时序，和绑了 DISPLAY 编号](../prep命令改不了捕获屏.md) | explanation | pitfall | active |
 | `streaming.single-display-vdd-no-enumerate` | [单屏机器装完 VDD，DXGI 里没有虚拟屏](../单屏装虚拟屏不枚举.md) | explanation | pitfall | active |
 | `streaming.vdd-config-silent-ignore` | [改了 vdd_settings.xml 却不生效，虚拟屏永远停在 800x600](../虚拟屏配置不生效.md) | explanation | pitfall | active |
+| `streaming.vdd-idle-hide` | [待机时虚拟屏必须离开桌面拓扑，连接时再交给 Sunshine 拉起](../虚拟屏待机隐藏.md) | how-to | standard | active |
 | `streaming.version-matrix` | [官方只有一个版本适合长期停留：2026.516](../版本矩阵.md) | reference | note | active |
 | `streaming.virtual-display` | [虚拟屏要"先切屏再连接"，且切换权不能交给 Sunshine](../虚拟显示器方案.md) | explanation | standard | active |

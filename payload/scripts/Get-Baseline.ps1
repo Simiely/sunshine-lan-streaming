@@ -82,10 +82,19 @@ if ($vdd.Count -eq 0) {
     Add-Row 'A-03' '虚拟显示适配器' "$($vdd.Count) 个" '⚠️' (($vdd.FriendlyName) -join ' / ')
 }
 
-$vigem = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*' -ErrorAction SilentlyContinue |
-         Where-Object { $_.DisplayName -match 'ViGEmBus' } | Select-Object -First 1
-if ($vigem) { Add-Row 'A-04' '虚拟手柄驱动' "$($vigem.DisplayVersion)" '✅' '' }
-else { Add-Row 'A-04' '虚拟手柄驱动' '未安装' '⏸' '无手柄需求则不必装' }
+$vigemSvc = Get-Service -Name 'ViGEmBus' -ErrorAction SilentlyContinue
+$vigemUninst = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*',
+                                'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*' -ErrorAction SilentlyContinue |
+               Where-Object { $_.DisplayName -match 'ViGEm' } | Select-Object -First 1
+# ViGEmBus 1.21 实测没有卸载登记项，只认卸载表会误判"未安装"，所以以服务为主。
+if ($vigemSvc) {
+    $vigemVer = if ($vigemUninst -and $vigemUninst.DisplayVersion) { [string]$vigemUninst.DisplayVersion } else { 'service' }
+    Add-Row 'A-04' '虚拟手柄驱动' "$vigemVer（$($vigemSvc.Status)）" '✅' ''
+} elseif ($vigemUninst) {
+    Add-Row 'A-04' '虚拟手柄驱动' "$($vigemUninst.DisplayVersion)" '✅' ''
+} else {
+    Add-Row 'A-04' '虚拟手柄驱动' '未安装' '⏸' '无手柄需求则不必装'
+}
 
 # GPU 白名单来自设备配置；默认排除第三方虚拟适配器，避免把它当成宿主显卡
 $gpuPattern = [string](Get-DeviceConfigValue -Name 'gpu_vendor_pattern' -Default '(?i)NVIDIA|AMD|Radeon|Intel' -Config $DeviceCfg)
