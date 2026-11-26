@@ -41,6 +41,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPlainTextEdit,
     QPushButton,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -199,6 +200,30 @@ QLineEdit:focus { border-color: #3b82f6; }
 QLineEdit:disabled { color: #6b7280; background-color: #12161d; }
 QCheckBox { color: #c9ced6; spacing: 8px; }
 QCheckBox:disabled { color: #636b78; }
+QCheckBox#panelToggle {
+    color: #f4f6f8;
+    font-size: 14px;
+    font-weight: 600;
+    spacing: 10px;
+    padding: 12px 14px;
+    background-color: #101b2e;
+    border: 1px solid #2b4a7a;
+    border-radius: 7px;
+}
+QCheckBox#panelToggle:hover {
+    border-color: #3b82f6;
+    background-color: #13233d;
+}
+QCheckBox#panelToggle:checked {
+    border-color: #3b82f6;
+    background-color: #13233d;
+}
+QCheckBox#panelToggle:disabled {
+    color: #7a8496;
+    border-color: #263247;
+    background-color: #121722;
+}
+QLabel#optionHint { color: #93a4c4; font-size: 11px; padding-left: 14px; }
 QPushButton {
     background-color: #1b2029;
     border: 1px solid #2a3140;
@@ -386,10 +411,23 @@ class MainWindow(QMainWindow):
         form.addLayout(pwd_col, 1)
         top_layout.addLayout(form)
 
-        self.deploy_panel = QCheckBox(
-            "同时部署免登录面板（安装到 ProgramData，并创建桌面快捷方式）"
+        self.deploy_panel = QCheckBox("同时部署免登录面板（推荐）")
+        self.deploy_panel.setObjectName("panelToggle")
+        self.deploy_panel.setChecked(True)
+        self.deploy_panel.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+        )
+        self.deploy_panel.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.deploy_panel.setToolTip(
+            "勾选后调用 一键部署-免登录面板.cmd；取消则只做标准部署。"
         )
         top_layout.addWidget(self.deploy_panel)
+
+        option_hint = QLabel(
+            "安装到 ProgramData，并创建桌面快捷方式；之后打开面板无需账号密码。"
+        )
+        option_hint.setObjectName("optionHint")
+        top_layout.addWidget(option_hint)
 
         hint = QLabel(
             "凭据只用于本次部署；留空时用户名 admin、密码随机生成，结果会写入日志。"

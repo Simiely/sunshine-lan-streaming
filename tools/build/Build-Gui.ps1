@@ -4,9 +4,10 @@
     构建图形控制台（PySide6 / PyInstaller onedir）。
 
 .DESCRIPTION
-    产物：dist\gui-onedir\Sunshine控制台\Sunshine控制台.exe + _internal\
+    产物：dist\gui-<版本>\Sunshine控制台\Sunshine控制台.exe + _internal\
     随后由 Build-Package.ps1 把该目录的内容铺到离线包根目录：
     exe 保持根级可双击，_internal 是运行库，不能单独删除。
+    输出目录带版本号，避免上一版 GUI 正在运行时锁住 exe、导致重建失败。
     用 onedir 而不是 onefile：onefile 每次启动都要把几十兆依赖解压到 Temp，
     实测冒烟启动约 5 秒；onedir 不落地解压，启动接近源码运行。
     构建完自动跑一次 --smoke-test，确保 exe 能加载 Qt 并正常退出。
@@ -22,7 +23,14 @@ param(
 $ErrorActionPreference = 'Stop'
 $RepoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $Source   = Join-Path $RepoRoot 'tools\gui\sunshine_gui.py'
-$DistDir  = Join-Path $RepoRoot 'dist\gui-onedir'
+$Manifest = Join-Path $RepoRoot 'manifest\components.json'
+$version  = [string](Get-Content -LiteralPath $Manifest -Raw -Encoding UTF8 |
+                     ConvertFrom-Json).package.version
+if (-not $version) {
+    Write-Host 'FAIL manifest 缺少 package.version' -ForegroundColor Red
+    exit 1
+}
+$DistDir  = Join-Path $RepoRoot "dist\gui-$version"
 $WorkDir  = Join-Path $RepoRoot 'build\gui'
 
 if (-not (Test-Path -LiteralPath $Source)) {

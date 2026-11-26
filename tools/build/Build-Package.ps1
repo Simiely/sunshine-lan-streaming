@@ -157,10 +157,10 @@ Copy-Item -Path (Join-Path $Payload '*') -Destination $stage -Recurse -Force
 Ok "payload → staging"
 
 # 图形控制台是构建产物（不入 git）。没有它就不出包，避免用户拿到缺界面的版本。
-$guiDir = Join-Path $DistDir 'gui-onedir\Sunshine控制台'
+$guiDir = Join-Path $DistDir "gui-$version\Sunshine控制台"
 $guiExe = Join-Path $guiDir 'Sunshine控制台.exe'
 if (-not (Test-Path -LiteralPath $guiExe)) {
-    Fail '缺少 dist\gui-onedir\Sunshine控制台\Sunshine控制台.exe'
+    Fail "缺少 dist\gui-$version\Sunshine控制台\Sunshine控制台.exe"
     Info '先运行 tools\build\Build-Gui.ps1 构建图形控制台。'
     exit 1
 }
@@ -183,8 +183,8 @@ Sunshine 局域网串流 · 离线安装包 v$version
 
 零、一键部署（推荐）
     图形界面：双击 Sunshine控制台.exe（首次会请求管理员权限；
-    _internal 是运行库文件夹，勿删、勿单独移动），
-    勾选「同时部署免登录面板」可一并安装面板和桌面快捷方式。
+    默认勾选「同时部署免登录面板」，不想装面板时取消勾选即可；
+    _internal 是运行库文件夹，勿删、勿单独移动）。
     点「一键部署」即可；用户名、密码留空时用 admin / 随机密码，
     每一步结果实时显示在下方日志区。
     命令行：双击  一键部署.cmd
