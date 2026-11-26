@@ -2,7 +2,7 @@
 setlocal
 title Sunshine LAN Stream - One Click + Web Panel
 
-rem Same deployment as 一键部署.cmd, plus the on-demand no-login panel shortcut.
+rem Standard deployment plus the on-demand no-login panel shortcut.
 net session >nul 2>&1
 if %errorlevel% neq 0 (
     echo Requesting administrator privileges, click "Yes" in the prompt...
