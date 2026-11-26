@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## v0.7.0 — 2026-11-26
+
+### 新增
+
+- **按需免登录面板**：`Open-WebUI.ps1` 在 `127.0.0.1:47991` 起一个回环转发器，自动注入 Basic 凭据并重写 `Origin/Referer` 通过 CSRF，浏览器打开即进入 Web UI；空闲 10 分钟自动退出，不注册服务、不开机自启、不写防火墙。
+- **两个一键入口**：`一键部署.cmd` 保持标准部署；`一键部署-免登录面板.cmd` 额外把面板脚本复制到 `C:\ProgramData\sunshine-lan-streaming\panel`，并在公共桌面创建「Sunshine 控制台」快捷方式。结果弹窗会显示面板状态。
+- **卸载清理**：结束代理进程、删除 `%LOCALAPPDATA%\SunshinePanel`、公共桌面快捷方式与面板目录。
+
+### 验证
+
+- 模拟服务实测：GET/POST 均自动注入认证，`Origin` 被重写为 Sunshine 允许的来源，POST 不再触发 CSRF 拒绝。
+- 代理工作集约 75MB，空闲 CPU 接近 0；不经过 Moonlight 的 47984/47989 与 UDP 音视频端口。
+
 ## v0.6.11 — 2026-11-26
 
 ### 优化

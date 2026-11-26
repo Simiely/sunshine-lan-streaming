@@ -16,16 +16,23 @@
     Sunshine Web UI 用户名，默认 admin；未提供时交互询问。
 .PARAMETER Password
     Sunshine Web UI 密码；未提供时交互询问，直接回车随机生成 16 位。
+.PARAMETER WithWebPanel
+    额外安装按需免登录面板：复制面板脚本到 ProgramData，并在公共桌面创建
+    「Sunshine 控制台」快捷方式；不注册服务、不开机自启。
 .EXAMPLE
     powershell -ExecutionPolicy Bypass -File OneClick.ps1
+.EXAMPLE
+    powershell -ExecutionPolicy Bypass -File OneClick.ps1 -WithWebPanel
 #>
 [CmdletBinding()]
 param(
     [string]$Username = '',
-    [string]$Password = ''
+    [string]$Password = '',
+    [switch]$WithWebPanel
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot '_Baseline.ps1')
+$PayloadRoot = Split-Path $PSScriptRoot -Parent
 
 Write-Host ''
 Write-Host '==== 一键部署：Sunshine → 虚拟屏 → 分辨率卡片 ====' -ForegroundColor Cyan
@@ -59,6 +66,37 @@ function Invoke-Step {
     if ($null -eq $rc) { $rc = 0 }
     Write-Host "---- $Label 退出码 $rc ----" -ForegroundColor $(if ($rc -eq 0) { 'Green' } else { 'Red' })
     return [int]$rc
+}
+
+# 按需免登录面板：脚本装到 ProgramData，快捷方式放公共桌面。
+# 只是个本地转发器，不注册服务、不写防火墙、不开机自启。
+function Install-WebPanel {
+    $panelRoot = 'C:\ProgramData\sunshine-lan-streaming\panel'
+    $panelScripts = Join-Path $panelRoot 'scripts'
+    New-Item -ItemType Directory -Path $panelScripts -Force | Out-Null
+    foreach ($f in @('打开Sunshine面板.cmd', '停止Sunshine面板.cmd')) {
+        $src = Join-Path $PayloadRoot $f
+        if (-not (Test-Path -LiteralPath $src)) { throw "部署包缺少 $f" }
+        Copy-Item -LiteralPath $src -Destination (Join-Path $panelRoot $f) -Force
+    }
+    foreach ($f in @('Open-WebUI.ps1', 'Panel.ps1', '_Baseline.ps1')) {
+        $src = Join-Path $PSScriptRoot $f
+        if (-not (Test-Path -LiteralPath $src)) { throw "部署包缺少 scripts\$f" }
+        Copy-Item -LiteralPath $src -Destination (Join-Path $panelScripts $f) -Force
+    }
+
+    $desktop = [Environment]::GetFolderPath('CommonDesktopDirectory')
+    if (-not $desktop) { $desktop = [Environment]::GetFolderPath('Desktop') }
+    $lnk = Join-Path $desktop 'Sunshine 控制台.lnk'
+    $ws = New-Object -ComObject WScript.Shell
+    $s = $ws.CreateShortcut($lnk)
+    $s.TargetPath = Join-Path $panelRoot '打开Sunshine面板.cmd'
+    $s.WorkingDirectory = $panelRoot
+    $icon = Join-Path $env:ProgramFiles 'Sunshine\sunshine.exe'
+    if (Test-Path -LiteralPath $icon) { $s.IconLocation = "$icon,0" }
+    $s.Description = '免登录打开 Sunshine Web UI（空闲自动退出）'
+    $s.Save()
+    return $lnk
 }
 
 $installArgs = @('-Username', $Username)
@@ -101,6 +139,17 @@ foreach ($p in $data.PSObject.Properties.Name) { $obj[$p] = $data.$p }
 $obj['one_click'] = $true
 $obj['steps'] = [ordered]@{ install = $steps.install; vdd = $steps.vdd; cards = $steps.cards }
 
+$panelLink = $null
+$panelError = $null
+if ($WithWebPanel) {
+    if ($hostReady) {
+        try { $panelLink = Install-WebPanel } catch { $panelError = $_.Exception.Message }
+    } else {
+        $panelError = '宿主未就绪'
+    }
+    $obj['web_panel'] = [bool]$panelLink
+}
+
 $failures = @($obj['failures'] | Where-Object { $_ })
 if ($steps.install -ne 0) {
     $failures += '虚拟屏与分辨率卡片已跳过（宿主安装未通过）'
@@ -108,13 +157,18 @@ if ($steps.install -ne 0) {
     if ($steps.vdd -ne 0) { $failures += "虚拟屏步骤未通过（退出码 $($steps.vdd)）" }
     if ($steps.cards -ne 0) { $failures += "分辨率卡片步骤未通过（退出码 $($steps.cards)）" }
 }
+if ($panelError) { $failures += "免登录面板未安装：$panelError" }
 $obj['failures'] = @($failures | Select-Object -Unique)
 [System.IO.File]::WriteAllText($resultFile, ($obj | ConvertTo-Json -Depth 6), (New-Object System.Text.UTF8Encoding($false)))
 
 $rc = 0
-if ($steps.install -ne 0 -or $steps.vdd -ne 0 -or $steps.cards -ne 0) { $rc = 1 }
+if ($steps.install -ne 0 -or $steps.vdd -ne 0 -or $steps.cards -ne 0 -or $panelError) { $rc = 1 }
 Write-Host ''
 Write-Host "==== 一键部署完成：install=$($steps.install)  vdd=$($steps.vdd)  cards=$($steps.cards) ====" -ForegroundColor $(if ($rc -eq 0) { 'Green' } else { 'Red' })
+if ($panelLink) {
+    Write-Host "免登录面板  已安装，桌面快捷方式：$panelLink" -ForegroundColor Green
+    Write-Host '             双击打开即免登录，空闲 10 分钟自动退出。'
+}
 
 & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'Show-Result.ps1') -ExitCode $rc
 # Show-Result 保存 TXT 返回 0，直接关闭返回 3；部署是否成功只看步骤结果，

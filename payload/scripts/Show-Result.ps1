@@ -109,7 +109,13 @@ if ($isUninstall) {
         '可选步骤（按需双击）：',
         '  安装虚拟屏.cmd       连上时切换到虚拟屏，断开自动回滚',
         '  安装分辨率卡片.cmd   Moonlight 里按卡片记住分辨率',
-        '',
+        ''
+    )
+    if ($props -contains 'web_panel' -and [bool]$data.web_panel) {
+        $lines += '免登录面板：双击桌面「Sunshine 控制台」，空闲 10 分钟自动退出'
+        $lines += ''
+    }
+    $lines += @(
         '配置文件：C:\Program Files\Sunshine\config\sunshine.conf'
     )
     if ($stepLines.Count -gt 0) {

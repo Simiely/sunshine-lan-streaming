@@ -202,6 +202,7 @@ if ($phantom.Found -eq 0) {
 
 $lnkDirs = @(
     [Environment]::GetFolderPath('Desktop'),
+    [Environment]::GetFolderPath('CommonDesktopDirectory'),
     [Environment]::GetFolderPath('StartMenu'),
     (Join-Path $env:ProgramData 'Microsoft\Windows\Start Menu\Programs')
 )
@@ -229,6 +230,22 @@ if ($lnkCount -gt 0) { Good "已清理快捷方式/自启动 $lnkCount 项" } el
 if (Test-Path -LiteralPath 'C:\VirtualDisplayDriver') {
     try { Remove-Item -LiteralPath 'C:\VirtualDisplayDriver' -Recurse -Force -ErrorAction Stop; Good '已删除 C:\VirtualDisplayDriver' }
     catch { Warn "未能删除 C:\VirtualDisplayDriver：$($_.Exception.Message)" }
+}
+
+# 按需面板：先结束代理进程，再删状态目录，避免占用文件
+$panelState = Join-Path $env:LOCALAPPDATA 'SunshinePanel'
+$panelPidFile = Join-Path $panelState 'webpanel.pid'
+if (Test-Path -LiteralPath $panelPidFile) {
+    $panelPid = 0
+    [void][int]::TryParse((Get-Content -LiteralPath $panelPidFile -Raw -ErrorAction SilentlyContinue), [ref]$panelPid)
+    if ($panelPid -gt 0 -and (Get-Process -Id $panelPid -ErrorAction SilentlyContinue)) {
+        Stop-Process -Id $panelPid -Force -ErrorAction SilentlyContinue
+        Good "已停止免登录面板代理（PID $panelPid）"
+    }
+}
+if (Test-Path -LiteralPath $panelState) {
+    try { Remove-Item -LiteralPath $panelState -Recurse -Force -ErrorAction Stop; Good '已清理面板运行状态' }
+    catch { Warn "未能清理 $panelState：$($_.Exception.Message)" }
 }
 
 if (-not $KeepState) {

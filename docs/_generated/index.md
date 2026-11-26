@@ -24,6 +24,7 @@ related: []
 |---|---|---|---|---|---|
 | [局域网串流上线前要过的六道检查](../部署清单.md) | standard | active | @simiely | critical | `AGENTS.md` |
 | [用 6 张分辨率卡片代替在客户端反复改设置](../安装Moonlight卡片.md) | standard | active | @simiely | normal | `payload/scripts/Install-Cards.ps1` |
+| [按需免登录面板：本地回环代理自动注入 Web UI 凭据](../免登录面板.md) | standard | active | @simiely | normal | `payload/scripts/Open-WebUI.ps1` |
 | [出包只有两步：先拉资产，再打 zip](../出包流程.md) | standard | active | @simiely | critical | `tools/build/Build-Package.ps1` |
 | [待机时虚拟屏必须离开桌面拓扑，连接时再交给 Sunshine 拉起](../虚拟屏待机隐藏.md) | standard | active | @simiely | normal | `payload/scripts/Hide-Vdd.ps1` |
 
@@ -95,6 +96,7 @@ related: []
 | `streaming.install-moonlight-cards` | [用 6 张分辨率卡片代替在客户端反复改设置](../安装Moonlight卡片.md) | how-to | standard | active |
 | `streaming.install-verify-20261124` | [L1 通过：三项配置生效，一条判据被证伪](../reports/2026-11-24-安装验证.md) | reference | report | archived |
 | `streaming.moonlight-card-resolution` | [卡片选分辨率靠 dd_resolution_option=auto，静态表是它的候选集](../Moonlight卡片分辨率.md) | explanation | note | active |
+| `streaming.no-login-panel` | [按需免登录面板：本地回环代理自动注入 Web UI 凭据](../免登录面板.md) | how-to | standard | active |
 | `streaming.on-demand-vdd-choice` | [按需虚拟屏用 Sunshine 原生 ensure_only_display，prep 方案已实测否决](../按需虚拟屏选型.md) | explanation | decision | active |
 | `streaming.package-build` | [出包只有两步：先拉资产，再打 zip](../出包流程.md) | how-to | standard | active |
 | `streaming.prep-cmd-cannot-switch-capture` | [虚拟屏没被调用有两个坑：prep 时序，和绑了 DISPLAY 编号](../prep命令改不了捕获屏.md) | explanation | pitfall | active |

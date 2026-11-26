@@ -52,6 +52,7 @@ related: []
 | `streaming.fresh-install-redmibookpro15x-20261126` | [ViGEmBus 卸载残留不必重启：先删设备节点再停服务就能当天重装](../ViGEmBus卸载残留不必重启.md) | see-also | `docs/ViGEmBus卸载残留不必重启.md` |
 | `streaming.moonlight-card-resolution` | [用 6 张分辨率卡片代替在客户端反复改设置](../安装Moonlight卡片.md) | see-also | `docs/安装Moonlight卡片.md` |
 | `streaming.moonlight-card-resolution` | [虚拟屏没被调用有两个坑：prep 时序，和绑了 DISPLAY 编号](../prep命令改不了捕获屏.md) | see-also | `docs/prep命令改不了捕获屏.md` |
+| `streaming.no-login-panel` | [待机时虚拟屏必须离开桌面拓扑，连接时再交给 Sunshine 拉起](../虚拟屏待机隐藏.md) | see-also | `docs/虚拟屏待机隐藏.md` |
 | `streaming.on-demand-vdd-choice` | [用 6 张分辨率卡片代替在客户端反复改设置](../安装Moonlight卡片.md) | see-also | `docs/安装Moonlight卡片.md` |
 | `streaming.on-demand-vdd-choice` | [卡片选分辨率靠 dd_resolution_option=auto，静态表是它的候选集](../Moonlight卡片分辨率.md) | see-also | `docs/Moonlight卡片分辨率.md` |
 | `streaming.on-demand-vdd-choice` | [虚拟屏没被调用有两个坑：prep 时序，和绑了 DISPLAY 编号](../prep命令改不了捕获屏.md) | applies-to（反向：has-pitfall；来自 applies_to 字段） | `docs/prep命令改不了捕获屏.md` |
