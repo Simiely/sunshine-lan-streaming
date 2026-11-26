@@ -1,6 +1,6 @@
 # AGENTS.md · sunshine-lan-streaming 项目规则
 
-> 📌 **文档基线**：2026-11-26（`5b748d7`）—— 干净机全新安装闭环：ViGEmBus 无重启清理 + 三步全绿实测；zip 仍为 v0.6.0（knowledge profile）
+> 📌 **文档基线**：2026-11-26（`2dfdabb`）—— v0.6.1 断开回滚修复 + ViGEmBus 无重启清理与干净机闭环文档；zip 升为 v0.6.1（knowledge profile）
 > **更新文档后请更新此行**（日期 + 新 commit hash），并在 CHANGELOG 追加版本
 
 本仓库是 sunshine-lan-streaming 的知识库。回答相关问题前先读这份，再读 [docs/index.md](docs/index.md)。
