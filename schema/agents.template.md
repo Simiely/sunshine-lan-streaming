@@ -1,6 +1,6 @@
 # AGENTS.md · sunshine-lan-streaming 项目规则
 
-> 📌 **文档基线**：2026-11-26（`c852a04`）—— v0.7.7 恢复面板版公共桌面快捷方式，与旧脚本一致；zip 升为 v0.7.7（knowledge profile）
+> 📌 **文档基线**：2026-11-26（`32c8d03`）—— v0.8.0 移除图形控制台，恢复纯脚本交付；zip 125.62 MB（knowledge profile）
 > **更新文档后请更新此行**（日期 + 新 commit hash），并在 CHANGELOG 追加版本
 
 本仓库是 sunshine-lan-streaming 的知识库。回答相关问题前先读这份，再读 [docs/index.md](docs/index.md)。
