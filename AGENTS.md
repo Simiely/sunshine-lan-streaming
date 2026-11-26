@@ -1,6 +1,6 @@
 # AGENTS.md · sunshine-lan-streaming 项目规则
 
-> 📌 **文档基线**：2026-11-26（`81f1546`）—— v0.7.5 免登录面板默认勾选并强化视觉；zip 升为 v0.7.5（knowledge profile）
+> 📌 **文档基线**：2026-11-26（`8efbd27`）—— v0.7.6 免登录面板不再创建桌面快捷方式；zip 升为 v0.7.6（knowledge profile）
 > **更新文档后请更新此行**（日期 + 新 commit hash），并在 CHANGELOG 追加版本
 
 本仓库是 sunshine-lan-streaming 的知识库。回答相关问题前先读这份，再读 [docs/index.md](docs/index.md)。
