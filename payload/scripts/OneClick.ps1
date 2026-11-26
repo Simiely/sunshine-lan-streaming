@@ -87,4 +87,7 @@ Write-Host ''
 Write-Host "==== 一键部署完成：install=$($steps.install)  vdd=$($steps.vdd)  cards=$($steps.cards) ====" -ForegroundColor $(if ($rc -eq 0) { 'Green' } else { 'Red' })
 
 & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'Show-Result.ps1') -ExitCode $rc
-exit $LASTEXITCODE
+# Show-Result 保存 TXT 返回 0，直接关闭返回 3；部署是否成功只看步骤结果，
+# 弹窗关闭方式不影响入口的退出码，避免成功后被误判为“未完成”。
+if ($rc -ne 0) { exit 1 }
+exit 0
