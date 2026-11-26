@@ -1,6 +1,6 @@
 # AGENTS.md · sunshine-lan-streaming 项目规则
 
-> 📌 **文档基线**：2026-11-26（`bfcb9d2`）—— v0.6.10 直接复算 VDD device_id（18 秒）+ v0.6.9 CCD 接回 + v0.6.8 ViGEmBus/步骤退出码修复；zip 升为 v0.6.10（knowledge profile）
+> 📌 **文档基线**：2026-11-26（`f4505b0`）—— v0.6.11 卸载清理非present虚拟屏 + v0.6.10 直接复算 device_id；zip 升为 v0.6.11（knowledge profile）
 > **更新文档后请更新此行**（日期 + 新 commit hash），并在 CHANGELOG 追加版本
 
 本仓库是 sunshine-lan-streaming 的知识库。回答相关问题前先读这份，再读 [docs/index.md](docs/index.md)。
