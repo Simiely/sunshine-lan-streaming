@@ -86,12 +86,19 @@ function Install-WebPanel {
         Copy-Item -LiteralPath $src -Destination (Join-Path $panelScripts $f) -Force
     }
 
+    # 快捷方式走 wscript + vbs：双击只弹浏览器，不闪命令行窗口
+    $vbs = 'Open-Panel.vbs'
+    $vbsSrc = Join-Path $PSScriptRoot $vbs
+    if (-not (Test-Path -LiteralPath $vbsSrc)) { throw "部署包缺少 scripts\$vbs" }
+    Copy-Item -LiteralPath $vbsSrc -Destination (Join-Path $panelRoot $vbs) -Force
+
     $desktop = [Environment]::GetFolderPath('CommonDesktopDirectory')
     if (-not $desktop) { $desktop = [Environment]::GetFolderPath('Desktop') }
     $lnk = Join-Path $desktop 'Sunshine 控制台.lnk'
     $ws = New-Object -ComObject WScript.Shell
     $s = $ws.CreateShortcut($lnk)
-    $s.TargetPath = Join-Path $panelRoot '打开Sunshine面板.cmd'
+    $s.TargetPath = Join-Path $env:WINDIR 'System32\wscript.exe'
+    $s.Arguments = '//nologo "' + (Join-Path $panelRoot $vbs) + '"'
     $s.WorkingDirectory = $panelRoot
     $icon = Join-Path $env:ProgramFiles 'Sunshine\sunshine.exe'
     if (Test-Path -LiteralPath $icon) { $s.IconLocation = "$icon,0" }
