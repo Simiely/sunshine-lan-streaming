@@ -1,6 +1,6 @@
 # AGENTS.md · sunshine-lan-streaming 项目规则
 
-> 📌 **文档基线**：2026-11-26（`e194a24`）—— v0.6.7 一键部署可自定义 Web UI 凭据 + v0.6.6 退出码统一；zip 升为 v0.6.7（knowledge profile）
+> 📌 **文档基线**：2026-11-26（`1337d9c`）—— v0.6.8 修 ViGEmBus 旧登记误判与一键步骤退出码污染 + v0.6.7 自定义凭据；zip 升为 v0.6.8（knowledge profile）
 > **更新文档后请更新此行**（日期 + 新 commit hash），并在 CHANGELOG 追加版本
 
 本仓库是 sunshine-lan-streaming 的知识库。回答相关问题前先读这份，再读 [docs/index.md](docs/index.md)。
