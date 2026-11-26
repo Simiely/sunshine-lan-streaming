@@ -1,6 +1,6 @@
 # AGENTS.md · sunshine-lan-streaming 项目规则
 
-> 📌 **文档基线**：2026-11-26（`b1283c1`）—— v0.8.1 包根只留 3 个一键入口，其余移入手动工具；zip 125.62 MB（knowledge profile）
+> 📌 **文档基线**：2026-11-26（`e770d22`）—— v0.8.2 快捷方式改走 wscript 隐藏启动，双击只弹浏览器；zip 125.62 MB（knowledge profile）
 > **更新文档后请更新此行**（日期 + 新 commit hash），并在 CHANGELOG 追加版本
 
 本仓库是 sunshine-lan-streaming 的知识库。回答相关问题前先读这份，再读 [docs/index.md](docs/index.md)。
