@@ -1,6 +1,6 @@
 # AGENTS.md · sunshine-lan-streaming 项目规则
 
-> 📌 **文档基线**：2026-11-26（`b73c15a`）—— v0.6.6 部署/卸载退出码统一 + v0.6.4/0.6.5 卸载修复；zip 升为 v0.6.6（knowledge profile）
+> 📌 **文档基线**：2026-11-26（`e194a24`）—— v0.6.7 一键部署可自定义 Web UI 凭据 + v0.6.6 退出码统一；zip 升为 v0.6.7（knowledge profile）
 > **更新文档后请更新此行**（日期 + 新 commit hash），并在 CHANGELOG 追加版本
 
 本仓库是 sunshine-lan-streaming 的知识库。回答相关问题前先读这份，再读 [docs/index.md](docs/index.md)。
