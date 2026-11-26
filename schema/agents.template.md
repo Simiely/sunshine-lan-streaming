@@ -1,6 +1,6 @@
 # AGENTS.md · sunshine-lan-streaming 项目规则
 
-> 📌 **文档基线**：2026-11-26（`a10cd9b`）—— v0.7.3 图形控制台 + v0.7.2 安装时立即恢复物理屏；zip 升为 v0.7.3（knowledge profile）
+> 📌 **文档基线**：2026-11-26（`8f1ea30`）—— v0.7.4 面板部署开关 + onedir 启动优化；zip 升为 v0.7.4（knowledge profile）
 > **更新文档后请更新此行**（日期 + 新 commit hash），并在 CHANGELOG 追加版本
 
 本仓库是 sunshine-lan-streaming 的知识库。回答相关问题前先读这份，再读 [docs/index.md](docs/index.md)。
