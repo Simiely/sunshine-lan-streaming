@@ -490,8 +490,13 @@ Write-Host '等待激活  轮询 DXGI 输出（最多 60 秒）…'
 # 单屏笔记本实测（redmibookpro15x，AMD 780M）：设备节点 OK、驱动已加载，
 # 但 IddCx 输出不会自动加入桌面，DXGI 一直只报物理屏。DisplaySwitch /extend
 # 一次就能让虚拟屏出现，且是可逆动作——不改变任何 Sunshine 配置。
-# 只在轮询若干轮后仍无新输出时执行一次，避免多屏机器上无谓改动布局。
+#
+# 重装/重建设备后还有另一种情况（4070S，2026-11-26）：设备与显示器对象都是 OK，
+# 但 Windows 按显示数据库把这块屏保持为"未接入"，DXGI 始终不枚举。
+# 这时 DisplaySwitch 不一定生效，需要用 CCD 把 VDD 显式接回桌面（Hide-Vdd -Show）。
 $extendTried = $false
+$ccdTried    = $false
+$ccdRetried  = $false
 
 $deadline = (Get-Date).AddSeconds(60)
 $outputs  = @()
@@ -500,13 +505,38 @@ while ((Get-Date) -lt $deadline) {
     $tick++
     $outputs = @(Get-DxgiOutputs)
 
-    if (-not $extendTried -and $tick -ge 3) {
+    if (-not $ccdTried -and $tick -ge 3) {
+        $newOut = @($outputs | Where-Object { $_.Output -notin $beforeOut })
+        if ($newOut.Count -eq 0) {
+            $ccdTried = $true
+            Write-Host '          尝试通过 CCD 把虚拟屏接回桌面…'
+            & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'Hide-Vdd.ps1') -Show 2>&1 |
+                ForEach-Object { Write-Host "          $_" }
+            Start-Sleep -Seconds 2
+            $outputs = @(Get-DxgiOutputs)
+        }
+    }
+
+    if (-not $extendTried -and $ccdTried -and $tick -ge 8) {
         $newOut = @($outputs | Where-Object { $_.Output -notin $beforeOut })
         if ($newOut.Count -eq 0) {
             $extendTried = $true
-            Write-Host '          单屏拓扑未枚举出新输出，尝试 DisplaySwitch /extend…'
+            Write-Host '          CCD 未生效，尝试 DisplaySwitch /extend…'
             & DisplaySwitch.exe /extend 2>$null
             Start-Sleep -Seconds 3
+            $outputs = @(Get-DxgiOutputs)
+        }
+    }
+
+    # 布局被系统重置时再试一次 CCD
+    if (-not $ccdRetried -and $extendTried -and $tick -ge 14) {
+        $newOut = @($outputs | Where-Object { $_.Output -notin $beforeOut })
+        if ($newOut.Count -eq 0) {
+            $ccdRetried = $true
+            Write-Host '          再次通过 CCD 接回虚拟屏…'
+            & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'Hide-Vdd.ps1') -Show 2>&1 |
+                ForEach-Object { Write-Host "          $_" }
+            Start-Sleep -Seconds 2
             $outputs = @(Get-DxgiOutputs)
         }
     }
@@ -523,12 +553,9 @@ while ((Get-Date) -lt $deadline) {
         break
     }
     # 重跑场景：虚拟屏本来就在 before 快照里，差集为空、也没有"新输出"。
-    # 此时只要设备实例存在、DXGI 又能枚举到输出，就视为就绪
-    # （给 IddCx 留 2 轮时间建显示器）。
-    if ($tick -ge 2 -and $already.Count -gt 0 -and $outputs.Count -gt 0) {
-        Write-Host '          设备已存在且输出可枚举，视为就绪'
-        break
-    }
+    # 这种情况必须靠 knownOut（上次识别结果）判断，不能只看"设备存在且能枚举到
+    # 任意输出"——虚拟屏被数据库保持为未接入时，设备 OK、物理屏也有输出，
+    # 但 VDD 并不在 DXGI 里，提前放行会让后面的识别直接失败（4070S 实测）。
 
     # 每 5 秒报一次，让人知道还活着、还要等多久
     if ($tick % 5 -eq 0) {

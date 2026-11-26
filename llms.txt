@@ -51,4 +51,5 @@
 - [虚拟屏没被调用有两个坑：prep 时序，和绑了 DISPLAY 编号](./docs/prep命令改不了捕获屏.md) — prep 在编码器探测之后才跑会让连接失败；把 output_name 写成 DISPLAYn 则在编号变化后静默回退物理屏、分辨率不变。
 - [单屏机器装完 VDD，DXGI 里没有虚拟屏](./docs/单屏装虚拟屏不枚举.md) — AMD 780M 单屏笔记本上驱动节点已 OK、DXGI 却只有物理屏；DisplaySwitch /extend 一次即可枚举出虚拟屏。
 - [改了 vdd_settings.xml 却不生效，虚拟屏永远停在 800x600](./docs/虚拟屏配置不生效.md) — 配置文件写得完全正确、驱动也读到了，但只要文件带 UTF-8 BOM，XmlLite 就解析失败，虚拟屏回退到 EDID 硬编码的 800x600，而改文件、禁用/启用设备、重装驱动全都看不出任何异常。
+- [重装 VDD 后设备一切正常，Windows 却不把虚拟屏接回桌面](./docs/虚拟屏重装后不接入.md) — 手工卸载残留后重装，VDD 设备与显示器对象都是 OK，DXGI 只有两块物理屏；DisplaySwitch 不一定生效，需要用 CCD 显式接回。
 - [ViGEmBus 卸载残留不必重启：先删设备节点再停服务就能当天重装](./docs/ViGEmBus卸载残留不必重启.md) — 4070S 上"StopPending 只能重启"的结论来自删错了顺序；按设备节点→服务→驱动包→文件的顺序清理，可以在不重启的机器上当天重装并自动建起 ViGEmBus。

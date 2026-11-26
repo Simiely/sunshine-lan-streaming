@@ -24,6 +24,7 @@ related: []
 | `hardware.device-matrix` | [按需虚拟屏用 Sunshine 原生 ensure_only_display，prep 方案已实测否决](../按需虚拟屏选型.md) | see-also | `docs/按需虚拟屏选型.md` |
 | `hardware.device-matrix` | [单屏机器装完 VDD，DXGI 里没有虚拟屏](../单屏装虚拟屏不枚举.md) | applies-to（反向：has-pitfall；来自 applies_to 字段） | `docs/单屏装虚拟屏不枚举.md` |
 | `hardware.device-matrix` | [单屏机器装完 VDD，DXGI 里没有虚拟屏](../单屏装虚拟屏不枚举.md) | see-also | `docs/单屏装虚拟屏不枚举.md` |
+| `hardware.device-matrix` | [重装 VDD 后设备一切正常，Windows 却不把虚拟屏接回桌面](../虚拟屏重装后不接入.md) | applies-to（反向：has-pitfall；来自 applies_to 字段） | `docs/虚拟屏重装后不接入.md` |
 | `hardware.device-standard` | [本机跑通不等于换机可复现：两台实测设备的差异](../设备矩阵.md) | see-also | `docs/设备矩阵.md` |
 | `hardware.device-standard` | [卡片选分辨率靠 dd_resolution_option=auto，静态表是它的候选集](../Moonlight卡片分辨率.md) | see-also | `docs/Moonlight卡片分辨率.md` |
 | `hardware.install-redmibookpro15x-20261124` | [780M 单屏机装上了虚拟屏：需要手动 extend 一次](../reports/2026-11-24-redmibookpro15x-虚拟屏安装.md) | spawned-from（反向：spawned） | `docs/reports/2026-11-24-redmibookpro15x-虚拟屏安装.md` |
@@ -58,8 +59,10 @@ related: []
 | `streaming.prep-cmd-cannot-switch-capture` | [按需虚拟屏第一次尝试失败：prep 切屏卡死连接，改用原生 ensure_only_display](../reports/2026-11-24-redmibookpro15x-按需虚拟屏.md) | spawned-from（反向：spawned） | `docs/reports/2026-11-24-redmibookpro15x-按需虚拟屏.md` |
 | `streaming.single-display-vdd-no-enumerate` | [780M 单屏机装上了虚拟屏：需要手动 extend 一次](../reports/2026-11-24-redmibookpro15x-虚拟屏安装.md) | spawned-from（反向：spawned） | `docs/reports/2026-11-24-redmibookpro15x-虚拟屏安装.md` |
 | `streaming.single-display-vdd-no-enumerate` | [按需虚拟屏用 Sunshine 原生 ensure_only_display，prep 方案已实测否决](../按需虚拟屏选型.md) | see-also | `docs/按需虚拟屏选型.md` |
+| `streaming.single-display-vdd-no-enumerate` | [重装 VDD 后设备一切正常，Windows 却不把虚拟屏接回桌面](../虚拟屏重装后不接入.md) | see-also | `docs/虚拟屏重装后不接入.md` |
 | `streaming.vdd-config-silent-ignore` | [出包只有两步：先拉资产，再打 zip](../出包流程.md) | see-also | `docs/出包流程.md` |
 | `streaming.vdd-idle-hide` | [4070S 从零部署闭环：装完即可串流，断开回到隐藏态](../reports/2026-11-25-4070s-部署验证.md) | see-also | `docs/reports/2026-11-25-4070s-部署验证.md` |
+| `streaming.vdd-idle-hide` | [重装 VDD 后设备一切正常，Windows 却不把虚拟屏接回桌面](../虚拟屏重装后不接入.md) | see-also | `docs/虚拟屏重装后不接入.md` |
 | `streaming.version-matrix` | [局域网串流上线前要过的六道检查](../部署清单.md) | depends-on（反向：depended-on-by） | `docs/部署清单.md` |
 | `streaming.version-matrix` | [用 ensure_only_display 会让断开串流时卡死两分钟](../显示拓扑卡死.md) | applies-to（反向：has-pitfall；来自 applies_to 字段） | `docs/显示拓扑卡死.md` |
 | `streaming.version-matrix` | [用 ensure_only_display 会让断开串流时卡死两分钟](../显示拓扑卡死.md) | see-also | `docs/显示拓扑卡死.md` |
@@ -75,3 +78,5 @@ related: []
 | `streaming.virtual-display` | [改了 vdd_settings.xml 却不生效，虚拟屏永远停在 800x600](../虚拟屏配置不生效.md) | applies-to（反向：has-pitfall；来自 applies_to 字段） | `docs/虚拟屏配置不生效.md` |
 | `streaming.virtual-display` | [改了 vdd_settings.xml 却不生效，虚拟屏永远停在 800x600](../虚拟屏配置不生效.md) | see-also | `docs/虚拟屏配置不生效.md` |
 | `streaming.virtual-display` | [待机时虚拟屏必须离开桌面拓扑，连接时再交给 Sunshine 拉起](../虚拟屏待机隐藏.md) | see-also | `docs/虚拟屏待机隐藏.md` |
+| `streaming.virtual-display` | [重装 VDD 后设备一切正常，Windows 却不把虚拟屏接回桌面](../虚拟屏重装后不接入.md) | applies-to（反向：has-pitfall；来自 applies_to 字段） | `docs/虚拟屏重装后不接入.md` |
+| `streaming.virtual-display` | [重装 VDD 后设备一切正常，Windows 却不把虚拟屏接回桌面](../虚拟屏重装后不接入.md) | see-also | `docs/虚拟屏重装后不接入.md` |
