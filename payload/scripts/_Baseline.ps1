@@ -142,6 +142,10 @@ function Get-BaselineProfile {
             $set['dd_resolution_option']        = 'auto'
             $set['dd_refresh_rate_option']      = 'auto'
             $set['dd_hdr_option']               = 'disabled'
+            # 断开即回滚：缺省 disabled，Sunshine 只在应用关闭/最后会话终止时回滚，
+            # 客户端断开不一定触发。2026-11-26 实测日志只有 CLIENT DISCONNECTED，
+            # 没有 Trying to revert applied display device settings，物理屏不复位。
+            $set['dd_config_revert_on_disconnect'] = 'enabled'
         }
     }
 

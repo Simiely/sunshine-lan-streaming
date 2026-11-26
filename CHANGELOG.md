@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## v0.6.1 — 2026-11-26
+
+### 修正
+
+- **断开后物理屏不自动恢复**：虚拟屏基线缺少 `dd_config_revert_on_disconnect = enabled`，而 Sunshine 缺省是 `disabled`，客户端断开只在“应用关闭 / 最后会话终止”时回滚。2026-11-26 09:04 日志实测只有 `CLIENT DISCONNECTED`、没有 `Trying to revert applied display device settings`，桌面停在虚拟屏仍在拓扑的状态。`_Baseline.ps1` 的 vdd 配置档已固定写入该键；配置清单新增 E-06，[虚拟屏待机隐藏](docs/虚拟屏待机隐藏.md) 补充“必须显式打开”一节。
+- **ViGEmBus 残留提示**：`Install.ps1` 的 StopPending 提示不再直接要求重启，改为按 [ViGEmBus 卸载残留不必重启](docs/ViGEmBus卸载残留不必重启.md) 的顺序清理后重跑。
+- 4070S 报告追加 2026-11-26 补充说明，明确断开回滚缺口，并修正“ViGEmBus 只能重启”的表述。
+
+### 说明
+
+- 合并 2026-11-26 远端文档：ViGEmBus 清理顺序实测与 redmibookpro15x 全新安装报告；本轮代码改动使随包 zip 变为 v0.6.1。
+
 ## 文档更新 — 2026-11-26（v0.6.0 包内容未变）
 
 ### 新增

@@ -256,8 +256,8 @@ $vigemInstalledNow = $false
 if ($vigemSvc -and $vigemReg) {
     Ok "ViGEmBus 已安装（服务 $($vigemSvc.Status)）"
 } elseif ($vigemSvc -and -not $vigemReg -and $vigemSvc.Status -eq 'StopPending') {
-    # 卸载残留：服务对象卡在删除挂起，注册表已无，安装器无法重建服务，只能重启
-    Fail 'ViGEmBus 服务处于删除挂起状态（StopPending），请重启 Windows 后重新运行'
+    # 卸载残留：服务对象卡在删除挂起，注册表已无；按正确顺序清理即可，不必重启
+    Fail 'ViGEmBus 服务处于删除挂起状态（StopPending）；请按 设备节点→停服务→删服务→删驱动包 的顺序清理后重跑'
 } else {
     $vigemSetup = Join-Path $InstallDir 'scripts\vigembus_installer.exe'
     if (-not (Test-Path -LiteralPath $vigemSetup)) {
