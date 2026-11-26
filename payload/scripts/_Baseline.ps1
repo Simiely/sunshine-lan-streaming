@@ -383,6 +383,52 @@ function Find-VddOutput {
 }
 
 <#
+    按 Sunshine/libdisplaydevice 的算法直接计算 VDD 的 device_id（GUID）。
+    源码依据（libdisplaydevice win_api_layer.cpp getDeviceId）：
+      data = EDID + instance_id[0 .. 第二个 '&') + instance_id[第三个 '&' .. 末尾]（含结尾 NUL）
+      device_id = "{" + UUIDv5(SHA1, 空命名空间, data) + "}"
+    已用 Sunshine verbose 日志的字节转储逐字节验证（4070S，2026-11-26）：
+      324 字节 = 256 EDID + UTF-16LE("DISPLAY\MTT1337\1&15ECD195") + UTF-16LE("&UID256\0")
+      -> {5eb52002-659f-5729-bdd8-9cdc4efd1bf5}
+    能算出来就不必等 DXGI 激活、识别 DISPLAYn 或重启服务解析日志。
+#>
+function Get-VddDeviceIdFromPnp {
+    param([string]$Pattern = '(?i)VDD by MTT|MTT1337')
+    $mons = @(Get-PnpDevice -Class Monitor -ErrorAction SilentlyContinue |
+              Where-Object { $_.FriendlyName -match $Pattern -or $_.InstanceId -match $Pattern })
+    if ($mons.Count -eq 0) { return $null }
+    $ok = @($mons | Where-Object { $_.Status -eq 'OK' })
+    $pick = if ($ok.Count -gt 0) { $ok[0] } else { $mons[0] }
+    $inst = [string]$pick.InstanceId
+    $i1 = $inst.IndexOf('&')
+    if ($i1 -lt 0) { return $null }
+    $i2 = $inst.IndexOf('&', $i1 + 1)
+    if ($i2 -lt 0) { return $null }
+    $i3 = $inst.IndexOf('&', $i2 + 1)
+    if ($i3 -lt 0) { return $null }
+    $reg = "HKLM:\SYSTEM\CurrentControlSet\Enum\$inst\Device Parameters"
+    try { $edid = (Get-ItemProperty -LiteralPath $reg -Name EDID -ErrorAction Stop).EDID } catch { return $null }
+    if (-not $edid -or @($edid).Count -lt 128) { return $null }
+    $uni = New-Object System.Text.UnicodeEncoding($false, $true)
+    $prefix = $inst.Substring(0, $i2)
+    $suffix = $inst.Substring($i3) + [char]0
+    $name = New-Object System.Collections.Generic.List[byte]
+    $name.AddRange([byte[]]$edid)
+    $name.AddRange($uni.GetBytes($prefix))
+    $name.AddRange($uni.GetBytes($suffix))
+    $all = New-Object byte[] (16 + $name.Count)
+    [Array]::Copy($name.ToArray(), 0, $all, 16, $name.Count)
+    $sha1 = [System.Security.Cryptography.SHA1]::Create()
+    try { $h = $sha1.ComputeHash($all) } finally { $sha1.Dispose() }
+    $b = New-Object byte[] 16
+    [Array]::Copy($h, 0, $b, 0, 16)
+    $b[6] = ($b[6] -band 0x0F) -bor 0x50
+    $b[8] = ($b[8] -band 0x3F) -bor 0x80
+    $hex = ($b | ForEach-Object { $_.ToString('x2') }) -join ''
+    return "{$($hex.Substring(0,8))-$($hex.Substring(8,4))-$($hex.Substring(12,4))-$($hex.Substring(16,4))-$($hex.Substring(20,12))}"
+}
+
+<#
     读写 display-state.json。Install-Vdd / Restore-Baseline 共用，
     避免两处各自拼 JSON 导致字段名漂移。
 #>

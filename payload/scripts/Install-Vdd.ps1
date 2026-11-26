@@ -123,7 +123,13 @@ if ($prevState) {
     if ($prevState.PSObject.Properties.Name -contains 'vdd_output')     { $knownOut    = $prevState.vdd_output }
     if ($prevState.PSObject.Properties.Name -contains 'physical_output') { $physicalOut = $prevState.physical_output }
 }
-if (-not $physicalOut) { $physicalOut = $prevName }
+# physical_output 必须是本次快照里真实存在的输出：
+# 旧快照缺字段时不能拿当前 output_name 顶上——重跑时它已经是虚拟屏 GUID，
+# 会把虚拟屏记成"原物理屏"，卸载时还原到已移除的设备。
+if ($physicalOut -and -not @($before | Where-Object { $_.Output -eq $physicalOut }).Count) {
+    $physicalOut = $null
+}
+if (-not $physicalOut) { $physicalOut = @($before | Select-Object -First 1).Output }
 
 $state = [ordered]@{
     saved_at        = (Get-Date).ToString('yyyy-MM-ddTHH:mm:ss')
@@ -485,6 +491,22 @@ if ($already.Count -gt 0) {
 # 实测本机 OrayIddDriver 设备状态是 OK，却在 DXGI 里没有任何输出——
 # 设备存在 ≠ 输出可用，这个坑必须绕开。
 $beforeOut = @($before | ForEach-Object { $_.Output })
+
+# ---------- 4a 优先用确定性算法取 device_id ----------
+# 设备节点建好后，从 PnP 监视器实例 + EDID 直接复算 Sunshine 的 device_id。
+# 成功时整段"等 DXGI 激活 + 识别 DISPLAYn"都可以跳过：不依赖编号、
+# 不需要把虚拟屏接回桌面，也不会因为日志写入时序而退回易变编号。
+$pnpId = $null
+for ($i = 0; $i -lt 8; $i++) {
+    $pnpId = Get-VddDeviceIdFromPnp
+    if ($pnpId) { break }
+    Start-Sleep -Seconds 2
+}
+$target = $null
+if ($pnpId) {
+    Write-Host "稳定 ID   $pnpId（EDID + 实例 ID 复算，跳过 DXGI 识别）"
+    $target = $pnpId
+} else {
 Write-Host '等待激活  轮询 DXGI 输出（最多 60 秒）…'
 
 # 单屏笔记本实测（redmibookpro15x，AMD 780M）：设备节点 OK、驱动已加载，
@@ -621,6 +643,18 @@ if (-not $target) {
         $target = $curOut
     }
 }
+}
+
+if ($pnpId) {
+    # 复算成功时跳过了 DXGI 识别，但设备本身仍需是就绪状态
+    $adapter = @(Get-VddAdapter)
+    if ($adapter.Count -eq 0) {
+        Write-Host 'FAIL 没有 VDD 显示适配器。'
+        Write-Host '     打开「设备管理器 → 显示适配器」，看是否有带感叹号的设备。'
+        exit 2
+    }
+    Write-Host "驱动就绪  $(($adapter | ForEach-Object { "$($_.FriendlyName)[$($_.Status)]" }) -join ', ')"
+}
 
 if (-not $target) {
     $newOnes = @($outputs | Where-Object { $_.Output -notin $beforeOut })
@@ -661,11 +695,15 @@ Write-Host ''
 # 这里从 Sunshine 启动日志里取虚拟屏的稳定 device_id（GUID）。
 # 服务需要先重启一次，日志才会打印包含 VDD 的最新设备列表。
 Write-Host ''
+if ($pnpId) {
+    $stableId = $pnpId
+    Write-Host "稳定 ID   $stableId（复算结果，跳过日志解析）"
+} else {
 Write-Host '稳定 ID   重启服务以获取 device_id…'
 try {
     Restart-Service -Name $script:SunshineService -Force -ErrorAction Stop
     (Get-Service -Name $script:SunshineService).WaitForStatus('Running', [TimeSpan]::FromSeconds(20))
-    Start-Sleep -Seconds 3
+    Start-Sleep -Seconds 2
 } catch {
     Write-Host "WARN 重启服务失败：$($_.Exception.Message)"
 }
@@ -685,6 +723,7 @@ function Get-VddDeviceIdFromLog {
         if ($text[$i] -eq '[') { $depth++ }
         elseif ($text[$i] -eq ']') { $depth--; if ($depth -eq 0) { $end = $i; break } }
     }
+    # 日志是边跑边写的，设备列表可能还没写完整；返回 null 让调用方继续等
     if ($end -lt 0) { return $null }
     try {
         $devices = $text.Substring($start, $end - $start + 1) | ConvertFrom-Json
@@ -694,12 +733,29 @@ function Get-VddDeviceIdFromLog {
     return $null
 }
 
-$stableId = Get-VddDeviceIdFromLog
+# 服务启动后设备列表是异步写入的，固定等 3 秒在慢机器上不够；
+# 轮询最多 20 秒，避免解析失败后把 output_name 退回易变的 \\.\DISPLAYn。
+$stableId = $null
+for ($i = 1; $i -le 20; $i++) {
+    $stableId = Get-VddDeviceIdFromLog
+    if ($stableId) { break }
+    Start-Sleep -Seconds 1
+}
+if (-not $stableId) {
+    # 配置里已经有 GUID 时直接沿用：它是稳定的，比退回 DISPLAYn 安全
+    $confNow = Read-ConfMap -Path $Conf
+    $curGuid = if ($confNow.Contains('output_name')) { [string]$confNow['output_name'] } else { '' }
+    if ($curGuid -match '^\{[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\}$') {
+        $stableId = $curGuid
+        Write-Host "稳定 ID   沿用配置中的 device_id $stableId"
+    }
+}
 if ($stableId) {
     Write-Host "稳定 ID   $stableId（friendly_name 含 VDD）"
     $target = $stableId
 } else {
     Write-Host "WARN 日志里没有 VDD 的 device_id，退回 $target —— 重启后编号可能变，需重跑本脚本"
+}
 }
 
 & powershell -NoProfile -ExecutionPolicy Bypass -File $Sibling -Profile vdd -OutputName $target
