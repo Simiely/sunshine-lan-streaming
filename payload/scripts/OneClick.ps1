@@ -52,7 +52,9 @@ function Invoke-Step {
     Write-Host ''
     Write-Host "---- $Label ----" -ForegroundColor Cyan
     $argList = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $PSScriptRoot $Script)) + $ScriptArgs
-    & powershell @argList
+    # 子脚本输出直接送控制台，不能进管道；否则会被当成函数返回值，
+    # 让调用方拿到字符串数组而不是退出码。
+    & powershell @argList 2>&1 | Out-Host
     $rc = $LASTEXITCODE
     if ($null -eq $rc) { $rc = 0 }
     Write-Host "---- $Label 退出码 $rc ----" -ForegroundColor $(if ($rc -eq 0) { 'Green' } else { 'Red' })
@@ -62,12 +64,18 @@ function Invoke-Step {
 $installArgs = @('-Username', $Username)
 if ($Password) { $installArgs += @('-Password', $Password) }
 $steps.install = Invoke-Step '1/3 安装宿主' 'Install.ps1' $installArgs
-if ($steps.install -eq 0) {
+# ViGEmBus 属可选项：宿主有失败项但服务/配置已就绪时，仍继续虚拟屏与卡片
+$hostReady = (Get-Service -Name $script:SunshineService -ErrorAction SilentlyContinue) -and (Test-Path -LiteralPath (Get-SunshineConfPath))
+if ($steps.install -eq 0 -or $hostReady) {
+    if ($steps.install -ne 0) {
+        Write-Host ''
+        Write-Host '宿主存在失败项，但服务与配置已就绪，继续虚拟屏与卡片步骤。' -ForegroundColor Yellow
+    }
     $steps.vdd = Invoke-Step '2/3 启用虚拟屏' 'Install-Vdd.ps1'
     $steps.cards = Invoke-Step '3/3 分辨率卡片' 'Install-Cards.ps1'
 } else {
     Write-Host ''
-    Write-Host '宿主安装未通过，跳过虚拟屏与卡片步骤。' -ForegroundColor Red
+    Write-Host '宿主安装未通过且服务不可用，跳过虚拟屏与卡片步骤。' -ForegroundColor Red
     $steps.vdd = -1
     $steps.cards = -1
 }

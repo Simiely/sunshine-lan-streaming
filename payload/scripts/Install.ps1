@@ -259,6 +259,22 @@ if ($vigemSvc -and $vigemReg) {
     # 卸载残留：服务对象卡在删除挂起，注册表已无；按正确顺序清理即可，不必重启
     Fail 'ViGEmBus 服务处于删除挂起状态（StopPending）；请按 设备节点→停服务→删服务→删驱动包 的顺序清理后重跑'
 } else {
+    # 服务不存在但卸载表里仍有「ViGEm Bus Driver」：多半是手工删了设备/驱动，
+    # 旧登记会让安装器误判"已安装"并直接返回 0。先静默清掉登记再装。
+    $stale = @(
+        Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*',
+                         'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*' -ErrorAction SilentlyContinue |
+        Where-Object { $_.DisplayName -match '^ViGEm' -and $_.PSChildName -match '^\{' }
+    )
+    foreach ($s in $stale) {
+        Info "清理旧的 ViGEmBus 安装登记（$($s.DisplayName) $($s.DisplayVersion)）…"
+        $up = Start-Process -FilePath 'msiexec.exe' -Wait -PassThru -ArgumentList @('/x', $s.PSChildName, '/qn', '/norestart')
+        if ($up.ExitCode -eq 0 -or $up.ExitCode -eq 1605 -or $up.ExitCode -eq 3010) {
+            Ok '旧登记已清理'
+        } else {
+            Warn "旧登记清理返回 $($up.ExitCode)，继续尝试安装"
+        }
+    }
     $vigemSetup = Join-Path $InstallDir 'scripts\vigembus_installer.exe'
     if (-not (Test-Path -LiteralPath $vigemSetup)) {
         Warn '包内没有 scripts\vigembus_installer.exe，跳过虚拟手柄驱动'
@@ -269,7 +285,7 @@ if ($vigemSvc -and $vigemReg) {
         if ($vp.ExitCode -ne 0 -and $vp.ExitCode -ne 3010) {
             Fail "ViGEmBus 安装失败（退出码 $($vp.ExitCode)）"
         } else {
-            for ($i = 0; $i -lt 60; $i++) {
+            for ($i = 0; $i -lt 90; $i++) {
                 Start-Sleep -Seconds 1
                 $vigemSvc = Get-Service -Name 'ViGEmBus' -ErrorAction SilentlyContinue
                 if ($vigemSvc -and (Test-Path -LiteralPath $ViGEmKey)) { break }
@@ -279,7 +295,7 @@ if ($vigemSvc -and $vigemReg) {
                 Ok "ViGEmBus 安装完成（服务 $($vigemSvc.Status)）"
                 if ($vp.ExitCode -eq 3010) { Info '安装器提示需重启后驱动才会完全生效' }
             } else {
-                Fail 'ViGEmBus 安装器返回成功，但 60 秒内未出现服务；请重启后重新运行'
+                Fail 'ViGEmBus 安装器返回成功，但 90 秒内未出现服务；请重启后重新运行'
             }
         }
     }
