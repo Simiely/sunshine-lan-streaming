@@ -492,6 +492,8 @@ if ($needRebuild) {
             $mkOut | ForEach-Object { "          $_" }
             # 设备一建好就立刻把物理屏拉回来，不等脚本末尾的 Hide-Vdd
             $null = Restore-PhysicalLayout -Attempts 4
+            # 保留原有的稳定等待：下面要立刻重新读取实例，读早了会误判"设备没建成"
+            Start-Sleep -Seconds 2
         } else {
             Write-Host 'WARN 包里没有 devcon.exe，无法重建设备；配置已写入，重启系统后生效'
         }
