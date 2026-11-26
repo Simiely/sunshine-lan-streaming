@@ -17,8 +17,8 @@
 .PARAMETER Password
     Sunshine Web UI 密码；未提供时交互询问，直接回车随机生成 16 位。
 .PARAMETER WithWebPanel
-    额外安装按需免登录面板：只把面板脚本复制到 ProgramData；
-    不创建桌面快捷方式、不注册服务、不开机自启。
+    额外安装按需免登录面板：复制面板脚本到 ProgramData，并在公共桌面创建
+    「Sunshine 控制台」快捷方式；不注册服务、不开机自启。
 .EXAMPLE
     powershell -ExecutionPolicy Bypass -File OneClick.ps1
 .EXAMPLE
@@ -68,7 +68,7 @@ function Invoke-Step {
     return [int]$rc
 }
 
-# 按需免登录面板：脚本装到 ProgramData，不建桌面快捷方式。
+# 按需免登录面板：脚本装到 ProgramData，快捷方式放公共桌面。
 # 只是个本地转发器，不注册服务、不写防火墙、不开机自启。
 function Install-WebPanel {
     $panelRoot = 'C:\ProgramData\sunshine-lan-streaming\panel'
@@ -84,7 +84,19 @@ function Install-WebPanel {
         if (-not (Test-Path -LiteralPath $src)) { throw "部署包缺少 scripts\$f" }
         Copy-Item -LiteralPath $src -Destination (Join-Path $panelScripts $f) -Force
     }
-    return $panelRoot
+
+    $desktop = [Environment]::GetFolderPath('CommonDesktopDirectory')
+    if (-not $desktop) { $desktop = [Environment]::GetFolderPath('Desktop') }
+    $lnk = Join-Path $desktop 'Sunshine 控制台.lnk'
+    $ws = New-Object -ComObject WScript.Shell
+    $s = $ws.CreateShortcut($lnk)
+    $s.TargetPath = Join-Path $panelRoot '打开Sunshine面板.cmd'
+    $s.WorkingDirectory = $panelRoot
+    $icon = Join-Path $env:ProgramFiles 'Sunshine\sunshine.exe'
+    if (Test-Path -LiteralPath $icon) { $s.IconLocation = "$icon,0" }
+    $s.Description = '免登录打开 Sunshine Web UI（空闲自动退出）'
+    $s.Save()
+    return $lnk
 }
 
 $installArgs = @('-Username', $Username)
@@ -127,15 +139,15 @@ foreach ($p in $data.PSObject.Properties.Name) { $obj[$p] = $data.$p }
 $obj['one_click'] = $true
 $obj['steps'] = [ordered]@{ install = $steps.install; vdd = $steps.vdd; cards = $steps.cards }
 
-$panelPath = $null
+$panelLink = $null
 $panelError = $null
 if ($WithWebPanel) {
     if ($hostReady) {
-        try { $panelPath = Install-WebPanel } catch { $panelError = $_.Exception.Message }
+        try { $panelLink = Install-WebPanel } catch { $panelError = $_.Exception.Message }
     } else {
         $panelError = '宿主未就绪'
     }
-    $obj['web_panel'] = [bool]$panelPath
+    $obj['web_panel'] = [bool]$panelLink
 }
 
 $failures = @($obj['failures'] | Where-Object { $_ })
@@ -153,9 +165,9 @@ $rc = 0
 if ($steps.install -ne 0 -or $steps.vdd -ne 0 -or $steps.cards -ne 0 -or $panelError) { $rc = 1 }
 Write-Host ''
 Write-Host "==== 一键部署完成：install=$($steps.install)  vdd=$($steps.vdd)  cards=$($steps.cards) ====" -ForegroundColor $(if ($rc -eq 0) { 'Green' } else { 'Red' })
-if ($panelPath) {
-    Write-Host "免登录面板  已安装到 $panelPath" -ForegroundColor Green
-    Write-Host '             在图形控制台点「启动免登录面板」打开，空闲 10 分钟自动退出。'
+if ($panelLink) {
+    Write-Host "免登录面板  已安装，桌面快捷方式：$panelLink" -ForegroundColor Green
+    Write-Host '             双击打开即免登录，空闲 10 分钟自动退出。'
 }
 
 $resultArgs = @('-ExitCode', $rc)

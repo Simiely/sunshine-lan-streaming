@@ -424,7 +424,7 @@ class MainWindow(QMainWindow):
         top_layout.addWidget(self.deploy_panel)
 
         option_hint = QLabel(
-            "安装到 ProgramData；之后点「启动免登录面板」打开，无需账号密码。"
+            "安装到 ProgramData，并创建桌面快捷方式；之后双击即免登录打开。"
         )
         option_hint.setObjectName("optionHint")
         top_layout.addWidget(option_hint)
@@ -670,7 +670,7 @@ class MainWindow(QMainWindow):
                 if self._deploy_with_panel:
                     message += (
                         "\n\n免登录面板已安装，"
-                        "可点上方「启动免登录面板」打开。"
+                        "可从桌面「Sunshine 控制台」快捷方式启动。"
                     )
                 QMessageBox.information(self, "部署完成", message)
             else:
