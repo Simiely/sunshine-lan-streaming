@@ -170,6 +170,13 @@ Sunshine 局域网串流 · 离线安装包 v$version
 本包已包含全部所需文件，安装过程不需要联网。
 第三方组件的许可证全文见 licenses\ 目录。
 
+零、一键部署（推荐）
+    双击  一键部署.cmd
+    依次完成：安装宿主 → 启用虚拟屏 → 部署分辨率卡片，
+    最后弹窗统一显示 Web UI 地址、账号密码和每一步结果；
+    任何一步失败都会在窗口里列出，可保存为 TXT。
+    想自己控制进度时，用下面的一、二、三。
+
 一、安装宿主（需要管理员）
     双击  安装.cmd
     装完即可用：Web UI 已是中文（locale=zh），局域网安全基线、
@@ -257,11 +264,13 @@ try {
     Expand-Archive -LiteralPath $zipPath -DestinationPath $check -Force
 
     $must = @(
+        '一键部署.cmd',
         '安装.cmd',
         '安装虚拟屏.cmd',
         '安装分辨率卡片.cmd',
         '使用说明.txt',
         'manifest\components.json',
+        'scripts\OneClick.ps1',
         'scripts\Install.ps1',
         'scripts\Install-Vdd.ps1',
         'scripts\Install-Cards.ps1',

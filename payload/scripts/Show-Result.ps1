@@ -38,6 +38,16 @@ $warnings = @()
 if ($props -contains 'warnings') { $warnings = @($data.warnings | Where-Object { $_ }) }
 $user = if ($props -contains 'username' -and $data.username) { [string]$data.username } else { 'admin' }
 $pass = if ($props -contains 'password' -and $data.password) { [string]$data.password } else { '见 credentials.txt' }
+$oneClick = ($props -contains 'one_click') -and [bool]$data.one_click
+$stepLines = @()
+if ($props -contains 'steps' -and $data.steps) {
+    $st = $data.steps
+    $stepLines = @(
+        "安装宿主：$(if ($st.install -eq 0) { 'OK' } else { "未通过（$($st.install)）" })",
+        "虚拟屏：$(if ($st.vdd -eq 0) { 'OK' } else { "未通过（$($st.vdd)）" })",
+        "分辨率卡片：$(if ($st.cards -eq 0) { 'OK' } else { "未通过（$($st.cards)）" })"
+    )
+}
 $ok = ($ExitCode -eq 0) -and ($failures.Count -eq 0)
 
 if ($ok) {
@@ -84,12 +94,17 @@ if ($ok) {
         '',
         '配置文件：C:\Program Files\Sunshine\config\sunshine.conf'
     )
+    if ($stepLines.Count -gt 0) {
+        $lines += ''
+        $lines += '一键步骤：'
+        $lines += ($stepLines | ForEach-Object { "  $_" })
+    }
     if ($warnings.Count -gt 0) {
         $lines += ''
         $lines += "警告 $($warnings.Count) 条："
         foreach ($w in @($warnings | Select-Object -First 8)) { $lines += "  - $w" }
     }
-    $title = 'Sunshine 部署成功'
+    $title = if ($oneClick) { 'Sunshine 一键部署成功' } else { 'Sunshine 部署成功' }
 } else {
     $lines = @(
         'Sunshine 部署未完成',
@@ -110,6 +125,11 @@ if ($ok) {
         $lines += '警告：'
         foreach ($w in @($warnings | Select-Object -First 6)) { $lines += "  - $w" }
     }
+    if ($stepLines.Count -gt 0) {
+        $lines += ''
+        $lines += '一键步骤：'
+        $lines += ($stepLines | ForEach-Object { "  $_" })
+    }
     $lines += @(
         '',
         '日志：C:\Program Files\Sunshine\config\sunshine.log',
@@ -117,7 +137,7 @@ if ($ok) {
         '',
         $(if ($props -contains 'password' -and $data.password) { "若 Sunshine 已启动，Web UI 凭据为 $user / $($data.password)" } else { '凭据已写入设备状态目录的 credentials.txt' })
     )
-    $title = 'Sunshine 部署失败'
+    $title = if ($oneClick) { 'Sunshine 一键部署失败' } else { 'Sunshine 部署失败' }
 }
 
 $text = $lines -join "`r`n"
