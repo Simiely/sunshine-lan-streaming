@@ -151,6 +151,45 @@ function Get-VddAdapter {
     return @(Get-VddDeviceInstances)
 }
 
+# 安装前已接入桌面的输出（物理屏）。设备节点一创建，Windows 会异步套用显示数据库里
+# 上一次保存的“仅 VDD”拓扑，物理屏整块掉出活动拓扑——这就是安装途中长时间黑屏的成因。
+# 这份清单只用于判断物理屏是否还在，掉线就立刻扩展回来。
+$baselinePhysical = @($before |
+    Where-Object { $_.Attached -eq 'yes' -and (-not $knownOut -or $_.Output -ne $knownOut) } |
+    ForEach-Object { $_.Output })
+
+<#
+    物理屏掉线就立即用扩展模式拉回桌面。
+    为什么不能只在末尾恢复：设备创建后还要复算 device_id（最多 16 秒）、等待/识别
+    虚拟屏、重启服务（10-20 秒），这段时间物理屏会一直是黑的。
+    为什么是循环：显示数据库的套用是异步的，第一次 extend 可能早于系统动作，
+    所以要在后续轮询里反复检查，而不是调用一次就认为好了。
+#>
+function Restore-PhysicalLayout {
+    param(
+        [int]$Attempts = 1,
+        [int]$DelayMilliseconds = 700
+    )
+    if ($baselinePhysical.Count -eq 0) { return $true }
+
+    $switch = Join-Path $env:SystemRoot 'System32\DisplaySwitch.exe'
+    for ($i = 1; $i -le [Math]::Max(1, $Attempts); $i++) {
+        $live = @(Get-DxgiOutputs | Where-Object {
+            $_.Output -in $baselinePhysical -and $_.Attached -eq 'yes'
+        })
+        if ($live.Count -ge $baselinePhysical.Count) { return $true }
+
+        Write-Host ("          物理屏掉线 {0}/{1}，恢复扩展布局…" -f $live.Count, $baselinePhysical.Count)
+        & $switch /extend 2>&1 | Out-Null
+        Start-Sleep -Milliseconds $DelayMilliseconds
+    }
+
+    $live = @(Get-DxgiOutputs | Where-Object {
+        $_.Output -in $baselinePhysical -and $_.Attached -eq 'yes'
+    })
+    return ($live.Count -ge $baselinePhysical.Count)
+}
+
 <#
     在 pnputil /enum-drivers 的输出里找 VDD 的驱动包，返回其 oemXX.inf 发布名。
     输出是空行分隔的块，每块含「发布名称 / 原始名称 / 提供程序名称」，中英文都要认。
@@ -451,7 +490,8 @@ if ($needRebuild) {
             Write-Host '分辨率    重新创建虚拟显示设备…'
             $mkOut = & $devcon install $inf.FullName 'Root\MttVDD' 2>&1
             $mkOut | ForEach-Object { "          $_" }
-            Start-Sleep -Seconds 2
+            # 设备一建好就立刻把物理屏拉回来，不等脚本末尾的 Hide-Vdd
+            $null = Restore-PhysicalLayout -Attempts 4
         } else {
             Write-Host 'WARN 包里没有 devcon.exe，无法重建设备；配置已写入，重启系统后生效'
         }
@@ -482,6 +522,8 @@ if ($already.Count -gt 0) {
         }
         if ($rc -eq 1) { Write-Host '          OK（提示需重启，继续等设备枚举）' }
         else { Write-Host '          OK' }
+        # 设备节点创建时 Windows 可能恢复“仅 VDD”拓扑；立刻扩展，把黑屏压到最短
+        $null = Restore-PhysicalLayout -Attempts 4
     } else {
         Write-Host 'WARN 包里没有 Dependencies\devcon.exe，退回 pnputil（可能不会创建设备节点）'
         & pnputil.exe /add-driver $inf.FullName /install 2>&1 | ForEach-Object { "          $_" }
@@ -511,6 +553,8 @@ $pnpId = $null
 for ($i = 0; $i -lt 8; $i++) {
     $pnpId = Get-VddDeviceIdFromPnp
     if ($pnpId) { break }
+    # 这段轮询同时充当黑屏看护：数据库若晚一步套用拓扑，这里会立刻再扩展一次
+    $null = Restore-PhysicalLayout
     Start-Sleep -Seconds 2
 }
 $target = $null
@@ -536,6 +580,8 @@ $outputs  = @()
 $tick     = 0
 while ((Get-Date) -lt $deadline) {
     $tick++
+    # 物理屏若被切走，立即拉回；扩展后虚拟屏通常也会一起出现
+    $null = Restore-PhysicalLayout
     $outputs = @(Get-DxgiOutputs)
 
     if (-not $ccdTried -and $tick -ge 3) {
@@ -769,6 +815,9 @@ if ($stableId) {
 }
 }
 
+# 写配置/重启服务前再确认一次物理屏在线，避免带着黑屏走完剩余步骤
+$null = Restore-PhysicalLayout -Attempts 2
+
 & powershell -NoProfile -ExecutionPolicy Bypass -File $Sibling -Profile vdd -OutputName $target
 $ExitCode = $LASTEXITCODE
 
@@ -789,6 +838,8 @@ if ($ExitCode -eq 0) {
     # 待机隐藏：把虚拟屏从桌面拓扑移除，物理屏布局保持不变；
     # Sunshine 连接时用 ensure_only_display 拉起，断开回滚到这个隐藏态。
     Write-Host ''
+    # 隐藏前最后确认一次：有物理屏在线，Hide-Vdd 才会走到正常隐藏分支
+    $null = Restore-PhysicalLayout
     Write-Host '待机隐藏  把虚拟屏从桌面拓扑移除…'
     & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'Hide-Vdd.ps1')
     if ($LASTEXITCODE -ne 0) {
