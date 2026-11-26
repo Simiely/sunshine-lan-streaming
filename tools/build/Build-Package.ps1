@@ -156,17 +156,6 @@ New-Item -ItemType Directory -Path $stage -Force | Out-Null
 Copy-Item -Path (Join-Path $Payload '*') -Destination $stage -Recurse -Force
 Ok "payload → staging"
 
-# 图形控制台是构建产物（不入 git）。没有它就不出包，避免用户拿到缺界面的版本。
-$guiDir = Join-Path $DistDir "gui-$version\Sunshine控制台"
-$guiExe = Join-Path $guiDir 'Sunshine控制台.exe'
-if (-not (Test-Path -LiteralPath $guiExe)) {
-    Fail "缺少 dist\gui-$version\Sunshine控制台\Sunshine控制台.exe"
-    Info '先运行 tools\build\Build-Gui.ps1 构建图形控制台。'
-    exit 1
-}
-Copy-Item -Path (Join-Path $guiDir '*') -Destination $stage -Recurse -Force
-Ok 'Sunshine控制台.exe + _internal → staging'
-
 # manifest 供 Install.ps1 校验版本与哈希
 $stageManifestDir = Join-Path $stage 'manifest'
 New-Item -ItemType Directory -Path $stageManifestDir -Force | Out-Null
@@ -182,12 +171,16 @@ Sunshine 局域网串流 · 离线安装包 v$version
 第三方组件的许可证全文见 licenses\ 目录。
 
 零、一键部署（推荐）
-    图形界面：双击 Sunshine控制台.exe（首次会请求管理员权限；
-    默认勾选「同时部署免登录面板」，不想装面板时取消勾选即可；
-    _internal 是运行库文件夹，勿删、勿单独移动）。
-    点「一键部署」即可；用户名、密码留空时用 admin / 随机密码，
-    每一步结果实时显示在下方日志区。
-    命令行：双击  一键部署.cmd
+    双击  一键部署-免登录面板.cmd
+    包含：宿主 + 虚拟屏 + 分辨率卡片 + 免登录面板，
+    并在公共桌面创建「Sunshine 控制台」快捷方式。
+    只想标准部署、不装面板时，双击  一键部署.cmd。
+    运行中会提示 Sunshine 用户名和密码：
+      用户名直接回车 = admin
+      密码直接回车   = 随机生成 16 位（结果窗口与 credentials.txt 会显示）
+    最后弹窗统一显示 Web UI 地址、账号密码和每一步结果；
+    任何一步失败都会在窗口里列出，可保存为 TXT。
+    想自己控制进度时，用下面的一、二、三。
     依次完成：安装宿主 → 启用虚拟屏 → 部署分辨率卡片，
     最后弹窗统一显示 Web UI 地址、账号密码和每一步结果；
     任何一步失败都会在窗口里列出，可保存为 TXT。
@@ -295,8 +288,6 @@ try {
         '安装.cmd',
         '安装虚拟屏.cmd',
         '安装分辨率卡片.cmd',
-        'Sunshine控制台.exe',
-        '_internal\PySide6\Qt6Core.dll',
         '使用说明.txt',
         'manifest\components.json',
         'scripts\OneClick.ps1',
