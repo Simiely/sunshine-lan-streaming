@@ -17,14 +17,14 @@
 [CmdletBinding()]
 param(
     [int]$ExitCode = 0,
+    [string]$ResultFile = '',
     [switch]$PrintOnly
 )
 $ErrorActionPreference = 'SilentlyContinue'
 Add-Type -AssemblyName System.Windows.Forms
 . (Join-Path $PSScriptRoot '_Baseline.ps1')
 
-$deviceDir = Get-DeviceStateRoot
-$resultFile = Join-Path $deviceDir 'install-result.json'
+$resultFile = if ($ResultFile) { $ResultFile } else { Join-Path (Get-DeviceStateRoot) 'install-result.json' }
 $data = $null
 if (Test-Path -LiteralPath $resultFile) {
     try { $data = Get-Content -LiteralPath $resultFile -Raw -Encoding UTF8 | ConvertFrom-Json } catch { }
@@ -49,8 +49,26 @@ if ($props -contains 'steps' -and $data.steps) {
     )
 }
 $ok = ($ExitCode -eq 0) -and ($failures.Count -eq 0)
+$isUninstall = ($props -contains 'mode') -and ([string]$data.mode -eq 'uninstall')
 
-if ($ok) {
+if ($isUninstall) {
+    $lines = @('Sunshine 相关组件已卸载', '')
+    if ($props -contains 'checks') {
+        foreach ($c in @($data.checks)) { if ($c) { $lines += "  - $c" } }
+    }
+    if ($failures.Count -gt 0) {
+        $lines += ''
+        $lines += '未完成项：'
+        foreach ($f in @($failures | Select-Object -First 10)) { $lines += "  - $f" }
+    }
+    if ($warnings.Count -gt 0) {
+        $lines += ''
+        $lines += '警告：'
+        foreach ($w in @($warnings | Select-Object -First 6)) { $lines += "  - $w" }
+    }
+    $lines += @('', '如需重新部署，解压安装包双击 一键部署.cmd。')
+    $title = if ($ok) { 'Sunshine 一键卸载完成' } else { 'Sunshine 一键卸载未完全成功' }
+} elseif ($ok) {
     $urls = @()
     foreach ($k in @('web_ui_lan', 'web_ui_local')) {
         if ($props -contains $k) {

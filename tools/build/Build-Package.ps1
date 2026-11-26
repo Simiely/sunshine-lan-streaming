@@ -220,7 +220,14 @@ Sunshine 局域网串流 · 离线安装包 v$version
     只是想看当前状态   → powershell -ExecutionPolicy Bypass -File scripts\Get-Baseline.ps1
     驱动日志           → C:\VirtualDisplayDriver\Logs\
 
-六、目录说明
+六、卸载（清空后可重装）
+    双击  一键卸载.cmd，输入 Y 确认
+    顺序：虚拟屏（恢复物理屏）→ Sunshine → ViGEmBus → 防火墙/快捷方式/状态目录。
+    只删本方案写入的内容，不动个人文件，也不碰 Oray/RayLink 等其他虚拟屏。
+    想保留 ViGEmBus（其他手柄工具也在用）：
+    powershell -ExecutionPolicy Bypass -File scripts\Uninstall.ps1 -Yes -KeepViGEmBus
+
+七、目录说明
     scripts\    全部 PowerShell 脚本
     conf\       虚拟屏分辨率预设（按设备名列出）
     licenses\   第三方许可证全文
@@ -265,12 +272,14 @@ try {
 
     $must = @(
         '一键部署.cmd',
+        '一键卸载.cmd',
         '安装.cmd',
         '安装虚拟屏.cmd',
         '安装分辨率卡片.cmd',
         '使用说明.txt',
         'manifest\components.json',
         'scripts\OneClick.ps1',
+        'scripts\Uninstall.ps1',
         'scripts\Install.ps1',
         'scripts\Install-Vdd.ps1',
         'scripts\Install-Cards.ps1',

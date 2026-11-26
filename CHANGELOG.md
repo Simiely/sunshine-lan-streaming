@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## v0.6.3 — 2026-11-26
+
+### 新增
+
+- **一键卸载**：包根新增 `一键卸载.cmd` 与 `scripts\Uninstall.ps1`。顺序固定为：虚拟屏（`Install-Vdd.ps1 -Uninstall`，恢复物理屏）→ Sunshine（停服务、按清单产品码 `msiexec /x`、清目录）→ ViGEmBus（设备节点→停服务→删服务→删驱动包，避免 StopPending）→ 防火墙/快捷方式/自启动/状态目录。
+- 卸载支持 `-KeepViGEmBus`（其他手柄工具在用）与 `-KeepState`（保留记录）；只删本方案写入的内容，不动个人文件与 Oray/RayLink。
+- `manifest.components.sunshine` 补 `product_code`，卸载使用版本锁定的 MSI 产品码；`Show-Result.ps1` 支持 `mode=uninstall` 与 `-ResultFile`，卸载结果同样深色弹窗、可保存 TXT。
+- 出包自检清单、使用说明、出包流程补卸载入口。
+
 ## v0.6.2 — 2026-11-26
 
 ### 新增
