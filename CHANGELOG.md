@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## v0.7.4 — 2026-11-26
+
+### 新增
+
+- 图形控制台「一键部署」增加「同时部署免登录面板」勾选项：勾选后调用 `一键部署-免登录面板.cmd`，把面板安装到 ProgramData 并创建桌面快捷方式；不勾选保持标准部署。
+
+### 优化
+
+- 图形控制台由 PyInstaller `--onefile` 改为 `--onedir`：不再每次启动把约 46 MB 依赖解压到 Temp。实测 `--smoke-test` 启动从约 5.1 秒降到约 1.0 秒（含 0.3 秒自动退出）；真实启动主要剩 UAC 确认时间。
+- 打包时排除未使用的 PyQt5 / PyQt6 / matplotlib / numpy / pandas / tkinter，减少无关依赖。
+
+### 构建
+
+- `Build-Gui.ps1` 输出 `dist\gui-onedir\Sunshine控制台\`；`Build-Package.ps1` 把 exe 和 `_internal\` 铺到离线包根目录，exe 仍可根级双击。
+
 ## v0.7.3 — 2026-11-26
 
 ### 新增

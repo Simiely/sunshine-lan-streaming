@@ -1,11 +1,14 @@
 ﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
-    构建图形控制台（PySide6 / PyInstaller onefile）。
+    构建图形控制台（PySide6 / PyInstaller onedir）。
 
 .DESCRIPTION
-    产物：dist\gui\Sunshine控制台.exe
-    随后由 Build-Package.ps1 复制到离线包根目录，与 一键部署.cmd 同级。
+    产物：dist\gui-onedir\Sunshine控制台\Sunshine控制台.exe + _internal\
+    随后由 Build-Package.ps1 把该目录的内容铺到离线包根目录：
+    exe 保持根级可双击，_internal 是运行库，不能单独删除。
+    用 onedir 而不是 onefile：onefile 每次启动都要把几十兆依赖解压到 Temp，
+    实测冒烟启动约 5 秒；onedir 不落地解压，启动接近源码运行。
     构建完自动跑一次 --smoke-test，确保 exe 能加载 Qt 并正常退出。
 
 .PARAMETER NoClean
@@ -19,7 +22,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $RepoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $Source   = Join-Path $RepoRoot 'tools\gui\sunshine_gui.py'
-$DistDir  = Join-Path $RepoRoot 'dist\gui'
+$DistDir  = Join-Path $RepoRoot 'dist\gui-onedir'
 $WorkDir  = Join-Path $RepoRoot 'build\gui'
 
 if (-not (Test-Path -LiteralPath $Source)) {
@@ -27,15 +30,26 @@ if (-not (Test-Path -LiteralPath $Source)) {
     exit 1
 }
 
+# 清掉上一次的单文件 exe / 目录，避免新旧两种产物混在一起。
+if (Test-Path -LiteralPath $DistDir) {
+    Remove-Item -LiteralPath $DistDir -Recurse -Force
+}
+
 $pyInstallerArgs = @(
     '-m', 'PyInstaller',
     '--noconfirm',
-    '--onefile',
+    '--onedir',
     '--windowed',
     '--name', 'Sunshine控制台',
     '--distpath', $DistDir,
     '--workpath', $WorkDir,
-    '--specpath', $WorkDir
+    '--specpath', $WorkDir,
+    '--exclude-module', 'PyQt5',
+    '--exclude-module', 'PyQt6',
+    '--exclude-module', 'matplotlib',
+    '--exclude-module', 'numpy',
+    '--exclude-module', 'pandas',
+    '--exclude-module', 'tkinter'
 )
 if (-not $NoClean) { $pyInstallerArgs += '--clean' }
 $pyInstallerArgs += $Source
@@ -48,7 +62,8 @@ if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 
-$exe = Join-Path $DistDir 'Sunshine控制台.exe'
+$appDir = Join-Path $DistDir 'Sunshine控制台'
+$exe = Join-Path $appDir 'Sunshine控制台.exe'
 if (-not (Test-Path -LiteralPath $exe)) {
     Write-Host "FAIL 未生成 $exe" -ForegroundColor Red
     exit 1
@@ -61,6 +76,8 @@ if ($smoke.ExitCode -ne 0) {
     exit $smoke.ExitCode
 }
 
-$sizeMb = [math]::Round((Get-Item -LiteralPath $exe).Length / 1MB, 1)
+$sizeMb = [math]::Round(
+    ((Get-ChildItem -LiteralPath $appDir -Recurse -File |
+      Measure-Object -Property Length -Sum).Sum / 1MB), 1)
 Write-Host ''
-Write-Host "OK   $exe  ${sizeMb} MB  冒烟测试通过" -ForegroundColor Green
+Write-Host "OK   $exe  目录 ${sizeMb} MB  冒烟测试通过" -ForegroundColor Green

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "package": {
     "name": "sunshine-lan-streaming",
-    "version": "0.7.3",
+    "version": "0.7.4",
     "target": "windows-amd64",
     "min_os": "10.0.19041",
     "scope": "单台 Windows 宿主、仅局域网、Moonlight 客户端"

@@ -32,6 +32,7 @@ from PySide6.QtCore import QProcess, QProcessEnvironment, Qt, QTimer
 from PySide6.QtGui import QColor, QFont, QPalette, QTextCursor
 from PySide6.QtWidgets import (
     QApplication,
+    QCheckBox,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -196,6 +197,8 @@ QLineEdit {
 }
 QLineEdit:focus { border-color: #3b82f6; }
 QLineEdit:disabled { color: #6b7280; background-color: #12161d; }
+QCheckBox { color: #c9ced6; spacing: 8px; }
+QCheckBox:disabled { color: #636b78; }
 QPushButton {
     background-color: #1b2029;
     border: 1px solid #2a3140;
@@ -287,6 +290,7 @@ class MainWindow(QMainWindow):
         self._decoder = ConsoleDecoder()
         self._pending_text: list[str] = []
         self._buttons: list[QPushButton] = []
+        self._deploy_with_panel = False
 
         self.setWindowTitle(APP_TITLE)
         self.resize(1000, 740)
@@ -382,6 +386,11 @@ class MainWindow(QMainWindow):
         form.addLayout(pwd_col, 1)
         top_layout.addLayout(form)
 
+        self.deploy_panel = QCheckBox(
+            "同时部署免登录面板（安装到 ProgramData，并创建桌面快捷方式）"
+        )
+        top_layout.addWidget(self.deploy_panel)
+
         hint = QLabel(
             "凭据只用于本次部署；留空时用户名 admin、密码随机生成，结果会写入日志。"
         )
@@ -440,6 +449,7 @@ class MainWindow(QMainWindow):
                 button.setEnabled(False)
             self.username.setEnabled(False)
             self.password.setEnabled(False)
+            self.deploy_panel.setEnabled(False)
 
     def _button(
         self,
@@ -499,6 +509,7 @@ class MainWindow(QMainWindow):
             button.setEnabled(enabled)
         self.username.setEnabled(enabled)
         self.password.setEnabled(enabled)
+        self.deploy_panel.setEnabled(enabled)
         if busy:
             self._set_status(f"执行中：{title}", "busy")
 
@@ -614,12 +625,16 @@ class MainWindow(QMainWindow):
     ) -> None:
         if action == "deploy":
             if ok:
-                QMessageBox.information(
-                    self,
-                    "部署完成",
+                message = (
                     "一键部署已执行完成。\n\n"
-                    "Sunshine 的账号密码、Web UI 地址和每一步结果已写入下方日志。",
+                    "Sunshine 的账号密码、Web UI 地址和每一步结果已写入下方日志。"
                 )
+                if self._deploy_with_panel:
+                    message += (
+                        "\n\n免登录面板已安装，"
+                        "可从桌面「Sunshine 控制台」快捷方式启动。"
+                    )
+                QMessageBox.information(self, "部署完成", message)
             else:
                 QMessageBox.warning(
                     self,
@@ -684,11 +699,27 @@ class MainWindow(QMainWindow):
             )
             return
 
+        with_panel = self.deploy_panel.isChecked()
+        cmd_name = (
+            "一键部署-免登录面板.cmd" if with_panel else "一键部署.cmd"
+        )
+        cmd_path = self.root / cmd_name
+        if not cmd_path.is_file():
+            QMessageBox.warning(
+                self,
+                "缺少入口脚本",
+                f"当前安装包没有 {cmd_name}。\n"
+                "请取消勾选，或换用 0.7.3 及之后的完整安装包。",
+            )
+            return
+
+        self._deploy_with_panel = with_panel
+        title = "一键部署（含免登录面板）" if with_panel else "一键部署"
         self._run(
             "deploy",
-            "一键部署",
+            title,
             "cmd.exe",
-            ["/c", str(self.root / "一键部署.cmd")],
+            ["/c", str(cmd_path)],
             stdin_data,
         )
 
