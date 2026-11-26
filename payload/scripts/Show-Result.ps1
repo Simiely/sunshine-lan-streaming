@@ -112,7 +112,7 @@ if ($isUninstall) {
         ''
     )
     if ($props -contains 'web_panel' -and [bool]$data.web_panel) {
-        $lines += '免登录面板：双击桌面「Sunshine 控制台」，空闲 10 分钟自动退出'
+        $lines += '免登录面板：在图形控制台点「启动免登录面板」，空闲 10 分钟自动退出'
         $lines += ''
     }
     $lines += @(
