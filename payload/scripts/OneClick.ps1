@@ -12,11 +12,18 @@
     单屏/多屏、物理屏布局、虚拟屏是否存在都由各脚本自行判断。
     宿主安装失败时跳过后续两步；虚拟屏或卡片失败不影响其它步骤完成，
     所有失败项都会在结果窗口中列出。
+.PARAMETER Username
+    Sunshine Web UI 用户名，默认 admin；未提供时交互询问。
+.PARAMETER Password
+    Sunshine Web UI 密码；未提供时交互询问，直接回车随机生成 16 位。
 .EXAMPLE
     powershell -ExecutionPolicy Bypass -File OneClick.ps1
 #>
 [CmdletBinding()]
-param()
+param(
+    [string]$Username = '',
+    [string]$Password = ''
+)
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot '_Baseline.ps1')
 
@@ -26,20 +33,35 @@ Write-Host "设备      $(Get-DeviceId)"
 Write-Host ''
 Assert-Admin -Hint '请双击包内的「一键部署.cmd」，由它提权运行。'
 
+# Web UI 凭据：直接回车 = 用户名 admin、密码随机 16 位
+if (-not $Username) {
+    $inputUser = Read-Host 'Sunshine 用户名（回车用 admin）'
+    if ([string]::IsNullOrWhiteSpace($inputUser)) { $Username = 'admin' } else { $Username = $inputUser.Trim() }
+}
+if (-not $Password) {
+    $inputPass = Read-Host 'Sunshine 密码（回车随机生成 16 位）'
+    if (-not [string]::IsNullOrWhiteSpace($inputPass)) { $Password = $inputPass }
+}
+Write-Host "凭据      $Username / $(if ($Password) { $Password } else { '随机生成' })"
+Write-Host ''
+
 $steps = [ordered]@{ install = $null; vdd = $null; cards = $null }
 
 function Invoke-Step {
-    param([string]$Label, [string]$Script)
+    param([string]$Label, [string]$Script, [string[]]$ScriptArgs = @())
     Write-Host ''
     Write-Host "---- $Label ----" -ForegroundColor Cyan
-    & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot $Script)
+    $argList = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $PSScriptRoot $Script)) + $ScriptArgs
+    & powershell @argList
     $rc = $LASTEXITCODE
     if ($null -eq $rc) { $rc = 0 }
     Write-Host "---- $Label 退出码 $rc ----" -ForegroundColor $(if ($rc -eq 0) { 'Green' } else { 'Red' })
     return [int]$rc
 }
 
-$steps.install = Invoke-Step '1/3 安装宿主' 'Install.ps1'
+$installArgs = @('-Username', $Username)
+if ($Password) { $installArgs += @('-Password', $Password) }
+$steps.install = Invoke-Step '1/3 安装宿主' 'Install.ps1' $installArgs
 if ($steps.install -eq 0) {
     $steps.vdd = Invoke-Step '2/3 启用虚拟屏' 'Install-Vdd.ps1'
     $steps.cards = Invoke-Step '3/3 分辨率卡片' 'Install-Cards.ps1'
