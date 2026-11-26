@@ -1,6 +1,6 @@
 # AGENTS.md · sunshine-lan-streaming 项目规则
 
-> 📌 **文档基线**：2026-11-26（`1337d9c`）—— v0.6.8 修 ViGEmBus 旧登记误判与一键步骤退出码污染 + v0.6.7 自定义凭据；zip 升为 v0.6.8（knowledge profile）
+> 📌 **文档基线**：2026-11-26（`1e3c971`）—— v0.6.9 重装 VDD 后用 CCD 接回桌面 + v0.6.8 ViGEmBus/步骤退出码修复；zip 升为 v0.6.9（knowledge profile）
 > **更新文档后请更新此行**（日期 + 新 commit hash），并在 CHANGELOG 追加版本
 
 本仓库是 sunshine-lan-streaming 的知识库。回答相关问题前先读这份，再读 [docs/index.md](docs/index.md)。
