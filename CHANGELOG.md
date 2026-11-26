@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.6.11 — 2026-11-26
+
+### 优化
+
+- **卸载清理非present虚拟屏记录**：历次重装会在设备管理器留下没有硬件、也没有驱动包的监视器条目。新增公共函数 `Remove-VddPhantomMonitors`（`pnputil /remove-device`），一键卸载和 `Install-Vdd.ps1 -Uninstall` 都会调用；4070S 实测 9 → 0，个别失败会提示重启后重试。
+
 ## v0.6.10 — 2026-11-26
 
 ### 优化

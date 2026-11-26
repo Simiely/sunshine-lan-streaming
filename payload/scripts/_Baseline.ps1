@@ -429,6 +429,24 @@ function Get-VddDeviceIdFromPnp {
 }
 
 <#
+    移除历次重装留下的非present VDD 监视器条目。
+    这些条目没有对应设备、也没有驱动包，但会一直留在设备管理器（显示隐藏设备）里。
+    pnputil /remove-device 对非present实例同样有效（4070S 实测 9 → 8）。
+#>
+function Remove-VddPhantomMonitors {
+    param([string]$Pattern = '(?i)VDD by MTT|MTT1337')
+    $items = @(Get-PnpDevice -Class Monitor -ErrorAction SilentlyContinue |
+               Where-Object { $_.Status -ne 'OK' -and ($_.FriendlyName -match $Pattern -or $_.InstanceId -match $Pattern) })
+    $removed = 0
+    $failed = @()
+    foreach ($d in $items) {
+        & pnputil.exe /remove-device $d.InstanceId 2>&1 | Out-Null
+        if ($LASTEXITCODE -eq 0) { $removed++ } else { $failed += $d.InstanceId }
+    }
+    return [pscustomobject]@{ Found = $items.Count; Removed = $removed; Failed = $failed }
+}
+
+<#
     读写 display-state.json。Install-Vdd / Restore-Baseline 共用，
     避免两处各自拼 JSON 导致字段名漂移。
 #>

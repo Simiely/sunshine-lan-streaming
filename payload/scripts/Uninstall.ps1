@@ -190,6 +190,16 @@ if ($fw.Count -gt 0) {
     Good '无 Sunshine 防火墙规则'
 }
 
+# 非present 监视器条目：没有设备、没有驱动包，但会一直挂在设备管理器里
+$phantom = Remove-VddPhantomMonitors
+if ($phantom.Found -eq 0) {
+    Good '无非present虚拟屏记录'
+} elseif ($phantom.Removed -eq $phantom.Found) {
+    Good "已清理非present虚拟屏记录 $($phantom.Removed) 个"
+} else {
+    Warn "已清理非present虚拟屏记录 $($phantom.Removed)/$($phantom.Found) 个，其余请重启后重试"
+}
+
 $lnkDirs = @(
     [Environment]::GetFolderPath('Desktop'),
     [Environment]::GetFolderPath('StartMenu'),

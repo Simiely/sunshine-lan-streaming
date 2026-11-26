@@ -198,6 +198,17 @@ if ($Uninstall) {
         Write-Host '卸载驱动  未在驱动库里找到 VDD 包，跳过'
     }
 
+    # 设备节点和驱动包删完后，历史重装留下的非present监视器条目还在；
+    # 它们没有对应硬件，只占设备管理器记录，一并清掉才算卸载干净。
+    $phantom = Remove-VddPhantomMonitors
+    if ($phantom.Found -gt 0) {
+        if ($phantom.Removed -eq $phantom.Found) {
+            Write-Host "清理记录  已移除 $($phantom.Removed) 个非present虚拟屏条目"
+        } else {
+            Write-Host "WARN 清理记录  已移除 $($phantom.Removed)/$($phantom.Found) 个，其余请重启后重试"
+        }
+    }
+
     Write-Host ''
     # 还原 output_name：优先用快照里的 physical_output（安装前那块物理屏），
     # 且必须确认它现在还真实存在，否则宁可不写——指向不存在的设备正是黑屏成因。
