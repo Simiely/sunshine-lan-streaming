@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## v0.6.4 — 2026-11-26
+
+### 修正
+
+- **一键卸载第一步即中止**：`Uninstall.ps1` 调用了 `Get-VddAdapter`，但该函数只定义在 `Install-Vdd.ps1` 内，未点源时直接 `CommandNotFoundException`。改为 CIM 查询（`friendly_name` 匹配 `VDD by MTT` 或 HardwareID 含 `MttVDD`）加 `C:\VirtualDisplayDriver` 目录双重判断，不再依赖子脚本内部函数。
+- 卸载检测已验证能识别隐藏状态的虚拟屏（`ROOT\DISPLAY\0001`，Status OK）。
+
 ## v0.6.3 — 2026-11-26
 
 ### 新增

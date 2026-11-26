@@ -64,8 +64,9 @@ if (Test-Path -LiteralPath $Manifest) {
 # ---------- 1. 虚拟屏 ----------
 Write-Host ''
 Write-Host '[1/4] 虚拟屏'
-$vdd = @(Get-VddAdapter)
-if ($vdd.Count -gt 0 -or (Test-Path -LiteralPath 'C:\VirtualDisplayDriver')) {
+$vddDevices = @(Get-CimInstance Win32_PnPEntity -ErrorAction SilentlyContinue |
+                Where-Object { $_.FriendlyName -match 'VDD by MTT' -or ($_.HardwareID -join ';') -match 'MttVDD' })
+if ($vddDevices.Count -gt 0 -or (Test-Path -LiteralPath 'C:\VirtualDisplayDriver')) {
     & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'Install-Vdd.ps1') -Uninstall
     if ($LASTEXITCODE -eq 0) { Good '虚拟屏已移除，物理屏已恢复' }
     else { Bad "虚拟屏卸载未通过（退出码 $LASTEXITCODE）" }
@@ -73,8 +74,6 @@ if ($vdd.Count -gt 0 -or (Test-Path -LiteralPath 'C:\VirtualDisplayDriver')) {
     Good '虚拟屏未安装，跳过'
 }
 # 驱动包与设备残留（Install-Vdd 正常时会清掉，这里兜底）
-$vddDevices = @(Get-CimInstance Win32_PnPEntity -ErrorAction SilentlyContinue |
-                Where-Object { $_.FriendlyName -match 'VDD by MTT' -or ($_.HardwareID -join ';') -match 'MttVDD' })
 foreach ($d in $vddDevices) {
     & pnputil.exe /remove-device $d.PNPDeviceID 2>&1 | ForEach-Object { Note $_ }
 }
