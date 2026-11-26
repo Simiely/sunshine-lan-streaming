@@ -4,7 +4,7 @@
     组装离线安装包：把 payload 与随包资产打成单个 zip。
 
 .DESCRIPTION
-    产物是**唯一交付物**。用户拿到 zip 之后：解压 → 双击 安装.cmd → 完成，
+    产物是**唯一交付物**。用户拿到 zip 之后：解压 → 双击 一键部署脚本 → 完成，
     全程不需要联网，也不需要另外下载任何东西。
 
     所以 zip 必须自包含：
@@ -152,7 +152,7 @@ $stage = Join-Path $DistDir "build\$version"
 if (Test-Path -LiteralPath $stage) { Remove-Item -LiteralPath $stage -Recurse -Force }
 New-Item -ItemType Directory -Path $stage -Force | Out-Null
 
-# payload 的全部内容直接铺到 zip 根，解压后就能看到 安装.cmd
+# payload 的全部内容直接铺到 zip 根，解压后就能看到一键部署脚本
 Copy-Item -Path (Join-Path $Payload '*') -Destination $stage -Recurse -Force
 Ok "payload → staging"
 
@@ -187,17 +187,17 @@ Sunshine 局域网串流 · 离线安装包 v$version
     运行中会提示 Sunshine 用户名和密码：
       用户名直接回车 = admin
       密码直接回车   = 随机生成 16 位（结果窗口与 credentials.txt 会显示）
-    想自己控制进度时，用下面的一、二、三。
+    想自己控制进度时，用 手动工具\ 里的分步入口。
 
 一、安装宿主（需要管理员）
-    双击  安装.cmd
+    双击  手动工具\安装.cmd
     装完即可用：Web UI 已是中文（locale=zh），局域网安全基线、
     显示与编码开关全部写入，服务自启并就绪，不需要进设置页手选。
     若机器缺 ViGEmBus（虚拟手柄驱动），会用 Sunshine 自带的安装器
     静默安装；装完弹窗显示 Web UI 地址与账号密码，可保存为 TXT。
 
 二、启用虚拟显示器
-    双击  安装虚拟屏.cmd
+    双击  手动工具\安装虚拟屏.cmd
     装完会把 Sunshine 切到虚拟屏捕获；单屏笔记本若 DXGI 暂时看不到
     新屏，脚本会自动执行一次 DisplaySwitch /extend 让它出现。
     连上时只保留虚拟屏（物理屏息屏），断开自动回滚物理屏。
@@ -211,7 +211,7 @@ Sunshine 局域网串流 · 离线安装包 v$version
     会静默失败。新设备请先确认它的分辨率在表里。
 
 三、分辨率卡片（可选，推荐）
-    双击  安装分辨率卡片.cmd
+    双击  手动工具\安装分辨率卡片.cmd
     会多出 6 张分辨率卡，按 iOS / 安卓 / Switch / 电视 / 通用 排序：
     iPhone 17 Pro Max 2868x1320@60      iPad Pro 12.9 2732x2048@120
     Find X9 Pro 2354x1080@120           Switch 底座 1920x1080@60
@@ -227,8 +227,8 @@ Sunshine 局域网串流 · 离线安装包 v$version
     已知可用：Moonlight for Android（含 axixi 第三方构建）。
 
 五、出问题时
-    物理屏黑掉不恢复   → 双击  恢复显示.cmd
-    想退回物理屏方案   → 双击  恢复基线.cmd
+    物理屏黑掉不恢复   → 双击  手动工具\恢复显示.cmd
+    想退回物理屏方案   → 双击  手动工具\恢复基线.cmd
     只是想看当前状态   → powershell -ExecutionPolicy Bypass -File scripts\Get-Baseline.ps1
     驱动日志           → C:\VirtualDisplayDriver\Logs\
 
@@ -240,6 +240,9 @@ Sunshine 局域网串流 · 离线安装包 v$version
     powershell -ExecutionPolicy Bypass -File scripts\Uninstall.ps1 -Yes -KeepViGEmBus
 
 七、目录说明
+    一键部署.cmd / 一键部署-免登录面板.cmd / 一键卸载.cmd
+                根目录保留的三个一键入口
+    手动工具\   分步安装、恢复显示/基线、面板开关
     scripts\    全部 PowerShell 脚本
     conf\       虚拟屏分辨率预设（按设备名列出）
     licenses\   第三方许可证全文
@@ -284,11 +287,16 @@ try {
 
     $must = @(
         '一键部署.cmd',
+        '一键部署-免登录面板.cmd',
         '一键卸载.cmd',
-        '安装.cmd',
-        '安装虚拟屏.cmd',
-        '安装分辨率卡片.cmd',
         '使用说明.txt',
+        '手动工具\安装.cmd',
+        '手动工具\安装虚拟屏.cmd',
+        '手动工具\安装分辨率卡片.cmd',
+        '手动工具\恢复显示.cmd',
+        '手动工具\恢复基线.cmd',
+        '手动工具\打开Sunshine面板.cmd',
+        '手动工具\停止Sunshine面板.cmd',
         'manifest\components.json',
         'scripts\OneClick.ps1',
         'scripts\Uninstall.ps1',
@@ -297,6 +305,10 @@ try {
         'scripts\Install-Cards.ps1',
         'scripts\Show-Result.ps1',
         'scripts\Hide-Vdd.ps1',
+        'scripts\Restore-Display.ps1',
+        'scripts\Restore-Baseline.ps1',
+        'scripts\Panel.ps1',
+        'scripts\Open-WebUI.ps1',
         'scripts\_Baseline.ps1',
         'conf\vdd-resolutions.txt',
         'conf\devices\defaults.json',

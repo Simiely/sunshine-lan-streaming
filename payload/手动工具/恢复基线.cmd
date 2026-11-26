@@ -1,8 +1,8 @@
 @echo off
 setlocal
-title Sunshine LAN Streaming - Restore Display
+title Sunshine LAN Streaming - Restore Baseline
 
-rem Admin required: re-enable display devices
+rem Admin required: restart the Sunshine service
 net session >nul 2>&1
 if %errorlevel% neq 0 (
     echo Requesting administrator privileges, click "Yes" in the prompt...
@@ -14,19 +14,21 @@ if %errorlevel% neq 0 (
     exit /b
 )
 
-cd /d "%~dp0"
+cd /d "%~dp0.."
 
 echo ============================================
-echo   Sunshine LAN Streaming - Restore Display
+echo   Sunshine LAN Streaming - Restore Baseline
 echo ============================================
-echo.
 
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\Restore-Display.ps1" %*
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0..\scripts\Restore-Baseline.ps1" %*
 set RC=%errorlevel%
 
 echo.
-echo If the physical screens are still dark, press Win+P on the host
-echo and choose "Extend", or reboot once to rebuild the display topology.
+if %RC% neq 0 (
+    echo Restore did not complete. Exit code %RC%
+) else (
+    echo Done.
+)
 echo.
 pause
 exit /b %RC%

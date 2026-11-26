@@ -3,7 +3,7 @@
 .SYNOPSIS
     一键部署：安装宿主 → 启用虚拟屏 → 分辨率卡片，最后统一弹出结果。
 .DESCRIPTION
-    分步入口（安装.cmd / 安装虚拟屏.cmd / 安装分辨率卡片.cmd）保持不变；
+    分步入口（手动工具\安装.cmd / 安装虚拟屏.cmd / 安装分辨率卡片.cmd）保持不变；
     本脚本只是按顺序调用同一个目录下的 Install.ps1、Install-Vdd.ps1、
     Install-Cards.ps1，并把各步退出码合并进 install-result.json，交给
     Show-Result.ps1 展示。
@@ -73,10 +73,11 @@ function Invoke-Step {
 function Install-WebPanel {
     $panelRoot = 'C:\ProgramData\sunshine-lan-streaming\panel'
     $panelScripts = Join-Path $panelRoot 'scripts'
+    $toolRoot = Join-Path $PayloadRoot '手动工具'
     New-Item -ItemType Directory -Path $panelScripts -Force | Out-Null
     foreach ($f in @('打开Sunshine面板.cmd', '停止Sunshine面板.cmd')) {
-        $src = Join-Path $PayloadRoot $f
-        if (-not (Test-Path -LiteralPath $src)) { throw "部署包缺少 $f" }
+        $src = Join-Path $toolRoot $f
+        if (-not (Test-Path -LiteralPath $src)) { throw "部署包缺少 手动工具\$f" }
         Copy-Item -LiteralPath $src -Destination (Join-Path $panelRoot $f) -Force
     }
     foreach ($f in @('Open-WebUI.ps1', 'Panel.ps1', '_Baseline.ps1')) {

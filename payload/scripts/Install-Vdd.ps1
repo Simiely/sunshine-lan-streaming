@@ -86,7 +86,7 @@ Write-Host '==== 虚拟显示器方案 ===='
 Write-Host "管理员    $(Test-Admin)"
 Write-Host ''
 
-Assert-Admin -Hint '请双击 payload\安装虚拟屏.cmd，它会在 UAC 提示里请求提权。'
+Assert-Admin -Hint '请双击 手动工具\安装虚拟屏.cmd，它会在 UAC 提示里请求提权。'
 
 # 全量落盘日志：控制台被关掉、或脚本半路退出，都能事后定位停在哪一步
 $LogFile = Join-Path $StateDir 'install-vdd.log'
@@ -834,7 +834,7 @@ if ($ExitCode -eq 0) {
     Write-Host '  Moonlight → 设置 → 打开「优化游戏设置」'
     Write-Host '  不开的话 dd_resolution_option=auto 会静默失效，画面会停在 800x600。'
     Write-Host ''
-    Write-Host '若断开后显示没恢复、或主机卡住，立刻运行 payload\恢复显示.cmd。'
+    Write-Host '若断开后显示没恢复、或主机卡住，立刻运行 手动工具\恢复显示.cmd。'
     Write-Host '要退回物理屏方案：本脚本加 -Uninstall。'
 
     # 待机隐藏：把虚拟屏从桌面拓扑移除，物理屏布局保持不变；

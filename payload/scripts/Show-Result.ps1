@@ -106,9 +106,9 @@ if ($isUninstall) {
         '  1. Moonlight 添加主机，输入上面的地址',
         '  2. 打开主机 Web UI 的 PIN 页面，输入 Moonlight 显示的配对码',
         '',
-        '可选步骤（按需双击）：',
-        '  安装虚拟屏.cmd       连上时切换到虚拟屏，断开自动回滚',
-        '  安装分辨率卡片.cmd   Moonlight 里按卡片记住分辨率',
+        '可选步骤（在 手动工具\ 里按需双击）：',
+        '  手动工具\安装虚拟屏.cmd       连上时切换到虚拟屏，断开自动回滚',
+        '  手动工具\安装分辨率卡片.cmd   Moonlight 里按卡片记住分辨率',
         ''
     )
     if ($props -contains 'web_panel' -and [bool]$data.web_panel) {

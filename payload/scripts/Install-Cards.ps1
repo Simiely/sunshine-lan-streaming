@@ -36,7 +36,7 @@ Write-Host '==== Moonlight 分辨率卡片 ===='
 Write-Host "设备      $(Get-DeviceId)"
 Write-Host "配置文件  $AppsFile"
 Write-Host ''
-Assert-Admin -Hint '请从 payload\安装分辨率卡片.cmd 启动。'
+Assert-Admin -Hint '请从 手动工具\安装分辨率卡片.cmd 启动。'
 
 if (-not (Test-Path -LiteralPath $AppsFile)) {
     Write-Host "FAIL 找不到 $AppsFile，请先安装 Sunshine。"

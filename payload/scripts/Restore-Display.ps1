@@ -83,4 +83,4 @@ if ($after.Count -gt $before.Count) {
     Write-Host "结果      输出数仍为 $($after.Count)。若物理屏不亮，按 Win+P 手动选「扩展」。"
 }
 Write-Host ''
-Write-Host '注意      本脚本不改 sunshine.conf。要退回物理屏方案，运行 payload\安装虚拟屏.cmd -Uninstall。'
+Write-Host '注意      本脚本不改 sunshine.conf。要退回物理屏方案，运行 手动工具\安装虚拟屏.cmd -Uninstall。'

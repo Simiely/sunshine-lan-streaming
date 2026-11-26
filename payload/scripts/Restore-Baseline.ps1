@@ -54,7 +54,7 @@ if (-not (Test-Path -LiteralPath $Conf)) {
     exit 1
 }
 
-Assert-Admin -Hint '请双击 payload\恢复基线.cmd；切换虚拟屏方案请用 payload\安装虚拟屏.cmd。'
+Assert-Admin -Hint '请双击 手动工具\恢复基线.cmd；切换虚拟屏方案请用 手动工具\安装虚拟屏.cmd。'
 
 # ---------- 1 目标键 ----------
 # 回退到 physical 时必须纠正 output_name。

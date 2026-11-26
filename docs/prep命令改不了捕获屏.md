@@ -16,7 +16,7 @@ symptom: '配好 global_prep_cmd（do 启用虚拟屏并 DisplaySwitch /external
 cause: '两个原因叠加。① 顺序：launch() 里是 configure_display → probe_encoders → proc::execute(appid)，prep 命令最后才跑，此时捕获屏与编码器已按物理屏初始化，改拓扑无效。② 冲突：dd_configuration_option=disabled 会调用 revert_configuration()（try_indefinitely_with_delay），在后台反复回滚显示配置，与 probe_encoders 抢 DXGI 设备，把探测卡死。'
 detect: '同时成立即判定：sunshine.log 无 Executing Do Cmd；有 Encoder reenumeration is required 但探测序列没有收尾的 Found H.264 encoder；Switch-Vdd/switch-vdd.log 无本次记录；客户端报连接失败而非黑屏。'
 avoid: '切屏交给 Sunshine 自己的 dd_configuration_option=ensure_only_display + output_name 指向虚拟屏，虚拟屏设备常驻启用但不在桌面拓扑（DisplaySwitch /internal）。不要用 prep 命令改捕获屏，也不要在启用外部切屏时把 dd_configuration_option 设为 disabled。'
-recover: '删除 sunshine.conf 里的 global_prep_cmd，改 dd_configuration_option=ensure_only_display、output_name=虚拟屏编号，重启 SunshineService。若桌面卡在单一屏，按 Win+P 选「仅电脑屏幕」或双击 恢复显示.cmd。'
+recover: '删除 sunshine.conf 里的 global_prep_cmd，改 dd_configuration_option=ensure_only_display、output_name=虚拟屏编号，重启 SunshineService。若桌面卡在单一屏，按 Win+P 选「仅电脑屏幕」或双击 手动工具\恢复显示.cmd。'
 applies_to:
   - streaming.on-demand-vdd-choice
   - streaming.virtual-display

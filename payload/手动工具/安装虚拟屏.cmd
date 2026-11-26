@@ -14,14 +14,14 @@ if %errorlevel% neq 0 (
     exit /b
 )
 
-cd /d "%~dp0"
+cd /d "%~dp0.."
 
 echo ============================================
 echo   Sunshine LAN Streaming - Virtual Display
 echo ============================================
 echo.
 
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\Install-Vdd.ps1" %*
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0..\scripts\Install-Vdd.ps1" %*
 set RC=%errorlevel%
 
 echo.
