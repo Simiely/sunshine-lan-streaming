@@ -1,6 +1,6 @@
 # AGENTS.md · sunshine-lan-streaming 项目规则
 
-> 📌 **文档基线**：2026-11-26（`f4505b0`）—— v0.6.11 卸载清理非present虚拟屏 + v0.6.10 直接复算 device_id；zip 升为 v0.6.11（knowledge profile）
+> 📌 **文档基线**：2026-11-26（`b949a9c`）—— v0.7.2 安装时立即恢复物理屏 + v0.7.1 入口 cmd 修复；zip 升为 v0.7.2（knowledge profile）
 > **更新文档后请更新此行**（日期 + 新 commit hash），并在 CHANGELOG 追加版本
 
 本仓库是 sunshine-lan-streaming 的知识库。回答相关问题前先读这份，再读 [docs/index.md](docs/index.md)。
