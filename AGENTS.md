@@ -1,6 +1,6 @@
 # AGENTS.md · sunshine-lan-streaming 项目规则
 
-> 📌 **文档基线**：2026-11-26（`75d1bc1`）—— v0.6.3 一键卸载（虚拟屏→Sunshine→ViGEmBus）+ v0.6.2 一键部署；zip 升为 v0.6.3（knowledge profile）
+> 📌 **文档基线**：2026-11-26（`0aa8017`）—— v0.6.4 修一键卸载首步中止 + v0.6.3 一键卸载；zip 升为 v0.6.4（knowledge profile）
 > **更新文档后请更新此行**（日期 + 新 commit hash），并在 CHANGELOG 追加版本
 
 本仓库是 sunshine-lan-streaming 的知识库。回答相关问题前先读这份，再读 [docs/index.md](docs/index.md)。
