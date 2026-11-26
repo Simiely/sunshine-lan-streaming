@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## v0.7.3 — 2026-11-26
+
+### 新增
+
+- **图形控制台**：`Sunshine控制台.exe`（PySide6）。暗色界面，入口自提升管理员权限；提供「一键部署」「启动免登录面板」「一键卸载」，以及「恢复显示（修复黑屏）」「恢复基线」「停止面板」「清空日志」。用户名/密码留空时沿用 admin / 随机密码。
+- 日志区用 `QProcess` 异步捕获 stdout/stderr，GBK/UTF-8 自适应增量解码，中文实时滚动；所有外部脚本都不阻塞 UI。
+- `OneClick.ps1` / `Uninstall.ps1` 支持 `SUNSHINE_GUI=1`：`Show-Result.ps1` 切到 `-PrintOnly`，只打印结果文本，不再弹内部窗口；成功/失败由图形界面统一提示。
+
+### 构建
+
+- 新增 `tools/gui/sunshine_gui.py`（源码）与 `tools/build/Build-Gui.ps1`（PyInstaller onefile 构建 + 冒烟测试）。
+- `Build-Package.ps1` 把 `dist\gui\Sunshine控制台.exe` 放入离线包根目录，并在解压自检中校验。GUI exe 属于构建产物，不入 git。
+
 ## v0.7.2 — 2026-11-26
 
 ### 优化

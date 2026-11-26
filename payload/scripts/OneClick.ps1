@@ -170,7 +170,9 @@ if ($panelLink) {
     Write-Host '             双击打开即免登录，空闲 10 分钟自动退出。'
 }
 
-& powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'Show-Result.ps1') -ExitCode $rc
+$resultArgs = @('-ExitCode', $rc)
+if ($env:SUNSHINE_GUI -eq '1') { $resultArgs += '-PrintOnly' }
+& powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'Show-Result.ps1') @resultArgs
 # Show-Result 保存 TXT 返回 0，直接关闭返回 3；部署是否成功只看步骤结果，
 # 弹窗关闭方式不影响入口的退出码，避免成功后被误判为“未完成”。
 if ($rc -ne 0) { exit 1 }

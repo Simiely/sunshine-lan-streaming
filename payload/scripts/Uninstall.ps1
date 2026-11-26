@@ -274,7 +274,9 @@ $payload = [ordered]@{
     failures  = @($script:Failures)
 }
 [System.IO.File]::WriteAllText($resultFile, ($payload | ConvertTo-Json -Depth 5), (New-Object System.Text.UTF8Encoding($false)))
-& powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'Show-Result.ps1') -ResultFile $resultFile -ExitCode $rc
+$resultArgs = @('-ResultFile', $resultFile, '-ExitCode', $rc)
+if ($env:SUNSHINE_GUI -eq '1') { $resultArgs += '-PrintOnly' }
+& powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'Show-Result.ps1') @resultArgs
 # Show-Result 保存 TXT 返回 0，直接关闭返回 3；卸载没有需要保留的日志，
 # 两种都算完成，只有真正有失败项时才让入口暂停。
 Remove-Item -LiteralPath $resultFile -Force -ErrorAction SilentlyContinue
